@@ -27,7 +27,7 @@ Procure pelo nome Smart-Map no repositório oficial do Qgis (Plugins -> Intalar 
 
 ### Instalação Manual
 
-1.	Baixe o arquivo Smart_Map.zip na página de [releases](https://github.com/gustavowillam/SmartMapPlugin/releases)  ou nesse link
+1.	Baixe o arquivo Smart_Map.zip na página de [releases](https://github.com/gustavowillam/SmartMapPlugin/releases)  ou nesse [link] (https://github.com/gustavowillam/SmartMapPlugin/releases/download/v1.0/Smart_Map.zip)
 2.	Abra o Qgis 3, entre no menu Plugins->Manage and Install Plugins->Install From Zip File
 3.	Na linha zip file, clique no botão "..." e escolha o arquivo zip baixado do plugin.
 
@@ -40,7 +40,7 @@ onde USER é seu nome de usuário
 
 ## Manual de Utilização 
 
-Um tutorial simplificado de como usar esse complemento: Wiki
+Um tutorial simplificado de como usar esse complemento: [Wiki] (https://github.com/gustavowillam/SmartMapPlugin/wiki)
 
 ## Reportar erros ou bugs
 
@@ -55,22 +55,22 @@ Caso você queira reportar algum erro não se esqueça de:
 ## QGIS
 
 QGIS (anteriormente conhecido como Quantum GIS) é um software livre com código-fonte aberto, multiplataforma de sistema de informação geográfica (SIG) que permite a visualização, edição e análise de dados georreferenciados.
-Download- Qgis 3 for Windows 64 bits
-Download- Qgis 3 for Linux Debian/Ubuntu
-Download- Other Downloads
+[Download](https://www.qgis.org/pt_BR/site/forusers/download.html#windows)- Qgis 3 for Windows 64 bits
+[Download](https://qgis.org/en/site/forusers/alldownloads.html#debian-ubuntu)- Qgis 3 for Linux Debian/Ubuntu
+[Download](https://qgis.org/en/site/forusers/download.html)- Other Downloads
 
 ## Links and Resources
 
-Qgis - A Free and Open Source Geographic Information System
-Python3 - Python is a programming language that lets you work quickly and integrate systems more effectively
+[Qgis](https://www.qgis.org/) - A Free and Open Source Geographic Information System
+[Python3](https://www.python.org/) - Python is a programming language that lets you work quickly and integrate systems more effectively
 
 ## Documentação:
 
-Python3
-Qgis 3.x python API
-PyQGIS developer cookbook: Release testing
+[Python3](https://www.python.org/)
+[Qgis 3.10.x python API] (https://qgis.org/pyqgis/master/)
+[PyQGIS developer cookbook] (https://docs.qgis.org/3.10/en/docs/pyqgis_developer_cookbook/index.html)
 
 ## Licença  GPL 3
 
-This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; 
+This program is free software; you can redistribute it and/or modify it under the terms of the [GNU General Public License](https://www.gnu.org/licenses/gpl-3.0.pt-br.html) as published by the Free Software Foundation; 
 either version 3 of the License, or (at your option) any later version.
