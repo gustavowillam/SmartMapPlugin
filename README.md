@@ -38,6 +38,7 @@ Coloque estes arquivos dentro da pasta Smart_Map ou crie essa pasta, no caminho:
 Linux: ~/.qgis/plugins/python/
 
 Windows: C:\Users\USER\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins
+
 onde USER é seu nome de usuário
 
 ## Manual de Utilização 
