@@ -24,8 +24,10 @@ Para que a instalação automática funcione, basta executar o Qgis como adminis
 ### Instalação Ideal
 
 Procure pelo nome Smart-Map no repositório oficial do Qgis (Plugins -> Intalar plugins) e clique em instalar.  
-Instalação Manual
-1.	Baixe o arquivo Smart_Map.zip na página de releases ou nesse link
+
+### Instalação Manual
+
+1.	Baixe o arquivo Smart_Map.zip na página de [releases](https://github.com/gustavowillam/SmartMapPlugin/releases)  ou nesse link
 2.	Abra o Qgis 3, entre no menu Plugins->Manage and Install Plugins->Install From Zip File
 3.	Na linha zip file, clique no botão "..." e escolha o arquivo zip baixado do plugin.
 
