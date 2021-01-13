@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SmartMapAbout</class>
+ <widget class="QDialog" name="SmartMapAbout">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>881</width>
+    <height>553</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Smart-Map Plugin</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>icon.png</normaloff>icon.png</iconset>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_2">
+   <item row="0" column="0">
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="2" column="0">
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Close</set>
+       </property>
+       <property name="centerButtons">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QTextBrowser" name="textBrowser">
+       <property name="frameShape">
+        <enum>QFrame::Panel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Sunken</enum>
+       </property>
+       <property name="html">
+        <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p align=&quot;center&quot; style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Droid Sans'; font-size:11pt;&quot;&gt;Smart-Map Plugin&lt;/span&gt;&lt;/p&gt;
+&lt;p align=&quot;center&quot; style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Droid Sans'; font-size:11pt;&quot;&gt;Version 1.0.0&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Droid Sans'; font-size:11pt;&quot;&gt;The &lt;/span&gt;&lt;span style=&quot; font-family:'Droid Sans'; font-size:11pt; font-weight:600;&quot;&gt;Smart-Map Plugin&lt;/span&gt;&lt;span style=&quot; font-family:'Droid Sans'; font-size:11pt;&quot;&gt; (SMP) is a free open source plugin for QGIS that allows &lt;/span&gt;&lt;span style=&quot; font-family:'Verdana,sans-serif'; font-size:11pt; color:#000000; background-color:#ffffff;&quot;&gt;the user to import data from a QGIS Layer. Generate the experimental semivariogram and theorical semivariograms such as: Linear, Spherical, Exponential and Gaussian. Generate the interpolation using the Ordinary Kriging and Machine Learning method. Generate management zones.&lt;/span&gt;&lt;/p&gt;
+&lt;p align=&quot;center&quot; style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Droid Sans'; font-size:11pt;&quot;&gt;Please check the &lt;/span&gt;&lt;a href=&quot;https://github.com/gustavowillam/SmartMapPlugin&quot;&gt;&lt;span style=&quot; font-size:11pt; text-decoration: underline; color:#0000ff;&quot;&gt;user manual&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:'Droid Sans'; font-size:11pt;&quot;&gt; available in Portuguese and English languages.&lt;/span&gt;&lt;/p&gt;
+&lt;p align=&quot;center&quot; style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Droid Sans'; font-size:11pt;&quot;&gt;For more information and tutorials visit the official site: &lt;/span&gt;&lt;a href=&quot;https://github.com/gustavowillam/SmartMapPlugin&quot;&gt;&lt;span style=&quot; font-size:11pt; text-decoration: underline; color:#0000ff;&quot;&gt;https://github.com/gustavowillam/SmartMapPlugin&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Droid Sans'; font-size:11pt;&quot;&gt;The Smart-Map Plugin is developed by: &lt;/span&gt;&lt;a href=&quot;http://lattes.cnpq.br/1193015676433034&quot;&gt;&lt;span style=&quot; font-size:11pt; text-decoration: underline; color:#0000ff;&quot;&gt;Gustavo Willam Pereira&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:'Droid Sans'; font-size:11pt;&quot;&gt; (IFSUDESTE-MG), &lt;/span&gt;&lt;a href=&quot;http://lattes.cnpq.br/8080945803303151&quot;&gt;&lt;span style=&quot; font-size:11pt; text-decoration: underline; color:#0000ff;&quot;&gt;Domingos Sárvio Magalhães Valente&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:'Droid Sans'; font-size:11pt;&quot;&gt; (UFV), &lt;/span&gt;&lt;a href=&quot;http://lattes.cnpq.br/6597845927084787&quot;&gt;&lt;span style=&quot; font-size:11pt; text-decoration: underline; color:#0000ff;&quot;&gt;Daniel Marçal de Queiroz&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:'Droid Sans'; font-size:11pt;&quot;&gt; (UFV), &lt;/span&gt;&lt;a href=&quot;http://lattes.cnpq.br/3816692895237070&quot;&gt;&lt;span style=&quot; font-size:11pt; text-decoration: underline; color:#0000ff;&quot;&gt;André Luiz de Freitas Coelho&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:'Droid Sans'; font-size:11pt;&quot;&gt; (UFV), &lt;/span&gt;&lt;a href=&quot;http://lattes.cnpq.br/8771861503993964&quot;&gt;&lt;span style=&quot; font-size:11pt; text-decoration: underline; color:#0000ff;&quot;&gt;Sandro Manuel Carmelino Hurtado&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:'Droid Sans'; font-size:11pt;&quot;&gt; (UFU). &lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Droid Sans'; font-size:11pt;&quot;&gt;Language: Python &lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Droid Sans'; font-size:11pt;&quot;&gt;This plugin use python librarys: &lt;/span&gt;&lt;a href=&quot;https://github.com/scikit-learn/scikit-learn&quot;&gt;&lt;span style=&quot; font-size:11pt; text-decoration: underline; color:#0000ff;&quot;&gt;scikit-learn&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:'Droid Sans'; font-size:11pt;&quot;&gt;, &lt;/span&gt;&lt;a href=&quot;https://github.com/scikit-fuzzy/scikit-fuzzy&quot;&gt;&lt;span style=&quot; font-size:11pt; text-decoration: underline; color:#0000ff;&quot;&gt;scikit-fuzzy&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:'Droid Sans'; font-size:11pt;&quot;&gt;, &lt;/span&gt;&lt;a href=&quot;https://github.com/pysal&quot;&gt;&lt;span style=&quot; font-size:11pt; text-decoration: underline; color:#0000ff;&quot;&gt;pysal&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:'Droid Sans'; font-size:11pt;&quot;&gt; and &lt;/span&gt;&lt;a href=&quot;https://github.com/GeoStat-Framework/PyKrige&quot;&gt;&lt;span style=&quot; font-size:11pt; text-decoration: underline; color:#0000ff;&quot;&gt;PyKrige&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:'Droid Sans'; font-size:11pt;&quot;&gt;. &lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Droid Sans'; font-size:11pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Droid Sans'; font-size:11pt;&quot;&gt;Smart-Map Plugin is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 3 of the License.&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Droid Sans'; font-size:11pt;&quot;&gt;See the GNU General Public License for more details:&lt;/span&gt;&lt;a href=&quot;http://www.gnu.org/licenses/&quot;&gt;&lt;span style=&quot; font-size:11pt; text-decoration: underline; color:#0000ff;&quot;&gt;http://www.gnu.org/licenses/&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:'Droid Sans'; font-size:11pt;&quot;&gt;.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="openExternalLinks">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>SmartMapAbout</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>SmartMapAbout</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

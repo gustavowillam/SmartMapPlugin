@@ -1,0 +1,2644 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>smart_mapDialogBase</class>
+ <widget class="QDialog" name="smart_mapDialogBase">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>753</width>
+    <height>645</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle">
+   <string>Smart-Map: Sistema de Suporte a Decisão para Agricultura de Precisão</string>
+  </property>
+  <widget class="QTabWidget" name="tabWidget_principal">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>2</x>
+     <y>1</y>
+     <width>750</width>
+     <height>640</height>
+    </rect>
+   </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="currentIndex">
+    <number>0</number>
+   </property>
+   <widget class="QWidget" name="tab_1">
+    <attribute name="title">
+     <string>Dados</string>
+    </attribute>
+    <widget class="QTableWidget" name="datatable_atributos">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>208</y>
+       <width>700</width>
+       <height>400</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QGroupBox" name="groupBox_Select_Var">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>26</x>
+       <y>265</y>
+       <width>671</width>
+       <height>51</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>Seleção de Atributos (Variáveis)</string>
+     </property>
+     <widget class="QLabel" name="label_28">
+      <property name="geometry">
+       <rect>
+        <x>13</x>
+        <y>26</y>
+        <width>20</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>X:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_29">
+      <property name="geometry">
+       <rect>
+        <x>206</x>
+        <y>26</y>
+        <width>20</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Y:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="comboBox_CordX">
+      <property name="geometry">
+       <rect>
+        <x>42</x>
+        <y>23</y>
+        <width>120</width>
+        <height>22</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="comboBox_CordY">
+      <property name="geometry">
+       <rect>
+        <x>233</x>
+        <y>23</y>
+        <width>120</width>
+        <height>22</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="pushButton_Select_Var">
+      <property name="geometry">
+       <rect>
+        <x>560</x>
+        <y>20</y>
+        <width>101</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Selecionar</string>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>16</width>
+        <height>16</height>
+       </size>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QGroupBox" name="groupBox_4">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>8</y>
+       <width>700</width>
+       <height>90</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>Diretório de Saída</string>
+     </property>
+     <widget class="QPushButton" name="pushButton_File_Save">
+      <property name="geometry">
+       <rect>
+        <x>610</x>
+        <y>26</y>
+        <width>80</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Selecionar...</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="lineEdit">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>46</x>
+        <y>27</y>
+        <width>560</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>C:\Program Files\QGIS 3.10\bin</string>
+      </property>
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_2">
+      <property name="geometry">
+       <rect>
+        <x>9</x>
+        <y>27</y>
+        <width>32</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Pasta:</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_Qgis_Vector">
+      <property name="geometry">
+       <rect>
+        <x>200</x>
+        <y>60</y>
+        <width>160</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Exportar ShapeFile</string>
+      </property>
+      <property name="checked">
+       <bool>false</bool>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_Qgis_Raster">
+      <property name="geometry">
+       <rect>
+        <x>50</x>
+        <y>59</y>
+        <width>140</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Exportar Raster</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_Qgis_Maps">
+      <property name="geometry">
+       <rect>
+        <x>366</x>
+        <y>61</y>
+        <width>220</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Exibir Gráficos e Mapas</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>107</y>
+       <width>700</width>
+       <height>91</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>Layers QGIS</string>
+     </property>
+     <widget class="QgsMapLayerComboBox" name="mMapLayerComboBox">
+      <property name="geometry">
+       <rect>
+        <x>129</x>
+        <y>26</y>
+        <width>350</width>
+        <height>25</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_1">
+      <property name="geometry">
+       <rect>
+        <x>8</x>
+        <y>27</y>
+        <width>115</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="locale">
+       <locale language="English" country="UnitedStates"/>
+      </property>
+      <property name="text">
+       <string>Layer de Entrada:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="pushButton_ImportQGIS">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>613</x>
+        <y>26</y>
+        <width>80</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Importar...</string>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="comboBox_VTarget">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>505</x>
+        <y>26</y>
+        <width>100</width>
+        <height>25</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_30">
+      <property name="geometry">
+       <rect>
+        <x>478</x>
+        <y>30</y>
+        <width>20</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Z:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_CRS_Layer">
+      <property name="geometry">
+       <rect>
+        <x>129</x>
+        <y>55</y>
+        <width>241</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="locale">
+       <locale language="English" country="UnitedStates"/>
+      </property>
+      <property name="text">
+       <string>CRS Layer: </string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+    </widget>
+    <zorder>groupBox_Select_Var</zorder>
+    <zorder>datatable_atributos</zorder>
+    <zorder>groupBox_4</zorder>
+    <zorder>groupBox_2</zorder>
+   </widget>
+   <widget class="QWidget" name="tab_2">
+    <attribute name="title">
+     <string>Grid</string>
+    </attribute>
+    <widget class="QGroupBox" name="groupBox_Area_Contorno">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>11</x>
+       <y>159</y>
+       <width>700</width>
+       <height>450</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>Mapa de Pontos Amostrados e Polígono de Contorno</string>
+     </property>
+     <widget class="QLabel" name="label_pontos_limite">
+      <property name="geometry">
+       <rect>
+        <x>60</x>
+        <y>30</y>
+        <width>580</width>
+        <height>400</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="scaledContents">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QTableWidget" name="datatable_limite">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>50</y>
+        <width>161</width>
+        <height>111</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_CordX_AreaCont">
+      <property name="geometry">
+       <rect>
+        <x>14</x>
+        <y>20</y>
+        <width>20</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>X:</string>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="comboBox_CordX_AreaCont">
+      <property name="geometry">
+       <rect>
+        <x>34</x>
+        <y>19</y>
+        <width>51</width>
+        <height>22</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_CordY_AreaCont">
+      <property name="geometry">
+       <rect>
+        <x>99</x>
+        <y>21</y>
+        <width>20</width>
+        <height>15</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Y:</string>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="comboBox_CordY_AreaCont">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>20</y>
+        <width>51</width>
+        <height>22</height>
+       </rect>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QGroupBox" name="groupBox_Interv_Interp">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>11</x>
+       <y>15</y>
+       <width>700</width>
+       <height>130</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>Grid de Interpolação</string>
+     </property>
+     <widget class="QLabel" name="label_9">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>30</y>
+        <width>140</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Tamanho Pixel X:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_10">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>60</y>
+        <width>140</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Tamanho Pixel Y:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_11">
+      <property name="geometry">
+       <rect>
+        <x>565</x>
+        <y>30</y>
+        <width>70</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Colunas:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_12">
+      <property name="geometry">
+       <rect>
+        <x>565</x>
+        <y>60</y>
+        <width>70</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Linhas:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="lineEdit_Num_Points_X">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>639</x>
+        <y>30</y>
+        <width>50</width>
+        <height>20</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="lineEdit_Num_Points_Y">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>639</x>
+        <y>60</y>
+        <width>50</width>
+        <height>20</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_16">
+      <property name="geometry">
+       <rect>
+        <x>405</x>
+        <y>60</y>
+        <width>47</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Y Max.:</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_15">
+      <property name="geometry">
+       <rect>
+        <x>405</x>
+        <y>30</y>
+        <width>47</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>X Max.:</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_14">
+      <property name="geometry">
+       <rect>
+        <x>242</x>
+        <y>60</y>
+        <width>35</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Y Min.:</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_13">
+      <property name="geometry">
+       <rect>
+        <x>242</x>
+        <y>30</y>
+        <width>35</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>X Min.:</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="SpinBox_Pixel_Size_X">
+      <property name="geometry">
+       <rect>
+        <x>157</x>
+        <y>30</y>
+        <width>60</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="minimum">
+       <number>1</number>
+      </property>
+      <property name="maximum">
+       <number>1000</number>
+      </property>
+      <property name="singleStep">
+       <number>1</number>
+      </property>
+      <property name="value">
+       <number>5</number>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="SpinBox_Pixel_Size_Y">
+      <property name="geometry">
+       <rect>
+        <x>157</x>
+        <y>60</y>
+        <width>60</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="minimum">
+       <number>1</number>
+      </property>
+      <property name="maximum">
+       <number>1000</number>
+      </property>
+      <property name="value">
+       <number>5</number>
+      </property>
+     </widget>
+     <widget class="QgsMapLayerComboBox" name="mMapLayerComboBox_AreaCont">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>193</x>
+        <y>92</y>
+        <width>373</width>
+        <height>25</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_Area_Contorno">
+      <property name="geometry">
+       <rect>
+        <x>28</x>
+        <y>95</y>
+        <width>161</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Polígono de Contorno:</string>
+      </property>
+      <property name="checked">
+       <bool>false</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="pushButton_Area_Contorno">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>573</x>
+        <y>93</y>
+        <width>80</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Definir...</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="lineEdit_XMin">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>278</x>
+        <y>30</y>
+        <width>100</width>
+        <height>20</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="lineEdit_YMin">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>280</x>
+        <y>60</y>
+        <width>100</width>
+        <height>20</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="lineEdit_XMax">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>450</x>
+        <y>30</y>
+        <width>100</width>
+        <height>20</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="lineEdit_YMax">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>450</x>
+        <y>60</y>
+        <width>100</width>
+        <height>20</height>
+       </rect>
+      </property>
+     </widget>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="tab_3">
+    <attribute name="title">
+     <string>Interpolação</string>
+    </attribute>
+    <widget class="QTabWidget" name="tabWidget_Interpolacao">
+     <property name="geometry">
+      <rect>
+       <x>5</x>
+       <y>10</y>
+       <width>730</width>
+       <height>600</height>
+      </rect>
+     </property>
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="tab_34">
+      <attribute name="title">
+       <string>Krigagem Ordinária</string>
+      </attribute>
+      <widget class="QTabWidget" name="tabWidget_Interpolacao_OK">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>210</y>
+         <width>690</width>
+         <height>360</height>
+        </rect>
+       </property>
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <widget class="QWidget" name="tab_30">
+        <attribute name="title">
+         <string>Variograma</string>
+        </attribute>
+        <widget class="QLabel" name="label_Variograma">
+         <property name="geometry">
+          <rect>
+           <x>23</x>
+           <y>10</y>
+           <width>630</width>
+           <height>310</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="scaledContents">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="tab_33">
+        <attribute name="title">
+         <string>Validação Cruzada</string>
+        </attribute>
+        <widget class="QLabel" name="label_validacao_cruzada_OK">
+         <property name="geometry">
+          <rect>
+           <x>325</x>
+           <y>10</y>
+           <width>350</width>
+           <height>320</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="scaledContents">
+          <bool>true</bool>
+         </property>
+        </widget>
+        <widget class="QTableWidget" name="datatable_validacao_cruzada_OK">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>30</y>
+           <width>300</width>
+           <height>300</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_44">
+         <property name="geometry">
+          <rect>
+           <x>140</x>
+           <y>6</y>
+           <width>170</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Grid Validação Cruzada</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pushButton_Validacao_Cruzada_OK">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>3</y>
+           <width>110</width>
+           <height>25</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Validação Cruzada</string>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="tab_31">
+        <attribute name="title">
+         <string>Mapa Interpolado</string>
+        </attribute>
+        <widget class="QLabel" name="label_Krigagem">
+         <property name="geometry">
+          <rect>
+           <x>270</x>
+           <y>10</y>
+           <width>400</width>
+           <height>320</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="scaledContents">
+          <bool>true</bool>
+         </property>
+        </widget>
+        <widget class="QTableWidget" name="datatable_pontos_interpolados_OK">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>30</y>
+           <width>250</width>
+           <height>300</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_37">
+         <property name="geometry">
+          <rect>
+           <x>70</x>
+           <y>10</y>
+           <width>180</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Grid Interpolação</string>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="tab_14">
+        <attribute name="title">
+         <string>Parâmetros Salvos</string>
+        </attribute>
+        <widget class="QTableWidget" name="datatable_semivariogramas">
+         <property name="geometry">
+          <rect>
+           <x>7</x>
+           <y>30</y>
+           <width>670</width>
+           <height>300</height>
+          </rect>
+         </property>
+         <property name="alternatingRowColors">
+          <bool>true</bool>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_5">
+         <property name="geometry">
+          <rect>
+           <x>11</x>
+           <y>10</y>
+           <width>350</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Duplo click nos parâmetros abaixo para carregá-los</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pushButton_Krigagem_All_Variables">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="geometry">
+          <rect>
+           <x>487</x>
+           <y>2</y>
+           <width>190</width>
+           <height>25</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Interpolar Variáveis Selecionadas</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pushButton_VariogramaSave">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="geometry">
+          <rect>
+           <x>364</x>
+           <y>2</y>
+           <width>121</width>
+           <height>25</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Salvar Parâmetros...</string>
+         </property>
+        </widget>
+       </widget>
+      </widget>
+      <widget class="QGroupBox" name="groupBox_Variograma">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>9</x>
+         <y>5</y>
+         <width>480</width>
+         <height>200</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Variograma</string>
+       </property>
+       <widget class="QLabel" name="label_32">
+        <property name="geometry">
+         <rect>
+          <x>4</x>
+          <y>60</y>
+          <width>130</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Distância Máxima:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="pushButton_VariogramaAjust">
+        <property name="geometry">
+         <rect>
+          <x>77</x>
+          <y>157</y>
+          <width>70</width>
+          <height>25</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Calcular...</string>
+        </property>
+       </widget>
+       <widget class="QGroupBox" name="groupBox_Variograma_Model">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="geometry">
+         <rect>
+          <x>213</x>
+          <y>21</y>
+          <width>261</width>
+          <height>171</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>Ajuste do Modelo</string>
+        </property>
+        <widget class="QLabel" name="label_86">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>22</y>
+           <width>41</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Modelo:</string>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="comboBox_Modelo">
+         <property name="geometry">
+          <rect>
+           <x>60</x>
+           <y>22</y>
+           <width>191</width>
+           <height>22</height>
+          </rect>
+         </property>
+         <property name="editable">
+          <bool>false</bool>
+         </property>
+         <item>
+          <property name="text">
+           <string>Linear</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Linear com Patamar</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Exponencial</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Esférico</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Gaussiano</string>
+          </property>
+         </item>
+        </widget>
+        <widget class="QLabel" name="label_87">
+         <property name="geometry">
+          <rect>
+           <x>24</x>
+           <y>111</y>
+           <width>21</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>A:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_88">
+         <property name="geometry">
+          <rect>
+           <x>5</x>
+           <y>86</y>
+           <width>41</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Co+C:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_89">
+         <property name="geometry">
+          <rect>
+           <x>14</x>
+           <y>60</y>
+           <width>31</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Co:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_94">
+         <property name="geometry">
+          <rect>
+           <x>5</x>
+           <y>140</y>
+           <width>40</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>RMSE:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+        <widget class="QLineEdit" name="lineEdit_Var_RMSE">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="geometry">
+          <rect>
+           <x>50</x>
+           <y>140</y>
+           <width>95</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+        <widget class="QLineEdit" name="lineEdit_Var_R2">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="geometry">
+          <rect>
+           <x>171</x>
+           <y>140</y>
+           <width>80</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_95">
+         <property name="geometry">
+          <rect>
+           <x>150</x>
+           <y>140</y>
+           <width>21</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;R&lt;span style=&quot; vertical-align:super;&quot;&gt;2&lt;/span&gt;:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
+        <widget class="QSlider" name="horizontalSlider_Nugget">
+         <property name="geometry">
+          <rect>
+           <x>125</x>
+           <y>58</y>
+           <width>125</width>
+           <height>22</height>
+          </rect>
+         </property>
+         <property name="minimum">
+          <number>0</number>
+         </property>
+         <property name="singleStep">
+          <number>1</number>
+         </property>
+         <property name="value">
+          <number>0</number>
+         </property>
+         <property name="sliderPosition">
+          <number>0</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+        <widget class="QSlider" name="horizontalSlider_Sill">
+         <property name="geometry">
+          <rect>
+           <x>125</x>
+           <y>84</y>
+           <width>125</width>
+           <height>22</height>
+          </rect>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="tickInterval">
+          <number>0</number>
+         </property>
+        </widget>
+        <widget class="QSlider" name="horizontalSlider_Range">
+         <property name="geometry">
+          <rect>
+           <x>125</x>
+           <y>110</y>
+           <width>125</width>
+           <height>22</height>
+          </rect>
+         </property>
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+        <widget class="QLineEdit" name="lineEdit_Nugget">
+         <property name="geometry">
+          <rect>
+           <x>50</x>
+           <y>60</y>
+           <width>70</width>
+           <height>20</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QLineEdit" name="lineEdit_Sill">
+         <property name="geometry">
+          <rect>
+           <x>51</x>
+           <y>87</y>
+           <width>70</width>
+           <height>20</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QLineEdit" name="lineEdit_Range">
+         <property name="geometry">
+          <rect>
+           <x>52</x>
+           <y>112</y>
+           <width>70</width>
+           <height>20</height>
+          </rect>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QLabel" name="label_VTargetOK">
+        <property name="geometry">
+         <rect>
+          <x>11</x>
+          <y>26</y>
+          <width>191</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Z:</string>
+        </property>
+       </widget>
+       <widget class="QCheckBox" name="checkBox_Variogram_Variancia">
+        <property name="geometry">
+         <rect>
+          <x>52</x>
+          <y>120</y>
+          <width>151</width>
+          <height>17</height>
+         </rect>
+        </property>
+        <property name="layoutDirection">
+         <enum>Qt::LeftToRight</enum>
+        </property>
+        <property name="text">
+         <string>Variância Amostral</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="pushButton_VariogramaReset">
+        <property name="geometry">
+         <rect>
+          <x>5</x>
+          <y>157</y>
+          <width>70</width>
+          <height>25</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>8</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Restaurar...</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_47">
+        <property name="geometry">
+         <rect>
+          <x>34</x>
+          <y>90</y>
+          <width>101</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Distância (h):</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="lineEdit_OK_DMax">
+        <property name="geometry">
+         <rect>
+          <x>140</x>
+          <y>60</y>
+          <width>70</width>
+          <height>20</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="lineEdit_OK_lags_dist">
+        <property name="geometry">
+         <rect>
+          <x>140</x>
+          <y>90</y>
+          <width>70</width>
+          <height>20</height>
+         </rect>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QGroupBox" name="groupBox_Krigagem">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>500</x>
+         <y>5</y>
+         <width>200</width>
+         <height>150</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Krigagem</string>
+       </property>
+       <widget class="QLineEdit" name="lineEdit_OK_VBRaio">
+        <property name="geometry">
+         <rect>
+          <x>120</x>
+          <y>66</y>
+          <width>70</width>
+          <height>20</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QCheckBox" name="checkBox_Krigagem_Alcance">
+        <property name="geometry">
+         <rect>
+          <x>76</x>
+          <y>101</y>
+          <width>81</width>
+          <height>17</height>
+         </rect>
+        </property>
+        <property name="layoutDirection">
+         <enum>Qt::LeftToRight</enum>
+        </property>
+        <property name="text">
+         <string>Alcance</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_85">
+        <property name="geometry">
+         <rect>
+          <x>21</x>
+          <y>67</y>
+          <width>90</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Raio:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_84">
+        <property name="geometry">
+         <rect>
+          <x>21</x>
+          <y>31</y>
+          <width>90</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Vizinhos:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="lineEdit_OK_VBNumMax">
+        <property name="geometry">
+         <rect>
+          <x>120</x>
+          <y>31</y>
+          <width>70</width>
+          <height>20</height>
+         </rect>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QPushButton" name="pushButton_Krigagem">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>540</x>
+         <y>167</y>
+         <width>120</width>
+         <height>25</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Interpolar...</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="tab_6">
+      <attribute name="title">
+       <string>Machine Learning</string>
+      </attribute>
+      <widget class="QTabWidget" name="tabWidget_Interpolacao_SVM">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>210</y>
+         <width>690</width>
+         <height>360</height>
+        </rect>
+       </property>
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <widget class="QWidget" name="tab">
+        <attribute name="title">
+         <string>Covariáveis</string>
+        </attribute>
+        <widget class="QTableWidget" name="datatable_SVM_Trainfeatures">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>30</y>
+           <width>510</width>
+           <height>300</height>
+          </rect>
+         </property>
+         <property name="sizeIncrement">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="baseSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="rowCount">
+          <number>0</number>
+         </property>
+         <property name="columnCount">
+          <number>0</number>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_100">
+         <property name="geometry">
+          <rect>
+           <x>533</x>
+           <y>10</y>
+           <width>140</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>8</pointsize>
+           <weight>50</weight>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Valor Observado</string>
+         </property>
+        </widget>
+        <widget class="QTableWidget" name="datatable_SVM_Trainlabels">
+         <property name="geometry">
+          <rect>
+           <x>533</x>
+           <y>30</y>
+           <width>140</width>
+           <height>300</height>
+          </rect>
+         </property>
+         <property name="sizeIncrement">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="baseSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="rowCount">
+          <number>0</number>
+         </property>
+         <property name="columnCount">
+          <number>0</number>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_39">
+         <property name="geometry">
+          <rect>
+           <x>12</x>
+           <y>5</y>
+           <width>175</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Covariáveis adicionadas:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="comboBox_SVM_Features_Adds">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="geometry">
+          <rect>
+           <x>199</x>
+           <y>3</y>
+           <width>190</width>
+           <height>25</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pushButton_SVM_Remove_Feature">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="geometry">
+          <rect>
+           <x>401</x>
+           <y>3</y>
+           <width>120</width>
+           <height>25</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Remover Covariável</string>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="tab_38">
+        <attribute name="title">
+         <string>Validação Cruzada</string>
+        </attribute>
+        <widget class="QLabel" name="label_validacao_cruzada_SVM">
+         <property name="geometry">
+          <rect>
+           <x>325</x>
+           <y>10</y>
+           <width>350</width>
+           <height>320</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="scaledContents">
+          <bool>true</bool>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_43">
+         <property name="geometry">
+          <rect>
+           <x>140</x>
+           <y>6</y>
+           <width>170</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Grid Validação Cruzada</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pushButton_Validacao_Cruzada_SVM">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>3</y>
+           <width>110</width>
+           <height>25</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Validação Cruzada</string>
+         </property>
+        </widget>
+        <widget class="QTableWidget" name="datatable_validacao_cruzada_SVM">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>30</y>
+           <width>300</width>
+           <height>300</height>
+          </rect>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="tab_36">
+        <attribute name="title">
+         <string>Mapa Interpolado</string>
+        </attribute>
+        <widget class="QLabel" name="label_SVM">
+         <property name="geometry">
+          <rect>
+           <x>270</x>
+           <y>10</y>
+           <width>400</width>
+           <height>320</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="scaledContents">
+          <bool>true</bool>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_38">
+         <property name="geometry">
+          <rect>
+           <x>70</x>
+           <y>10</y>
+           <width>180</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Grid Interpolação</string>
+         </property>
+        </widget>
+        <widget class="QTableWidget" name="datatable_pontos_interpolados_SVM">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>30</y>
+           <width>250</width>
+           <height>300</height>
+          </rect>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="tab_11">
+        <attribute name="title">
+         <string>Seleção de Variáveis</string>
+        </attribute>
+        <widget class="QTableWidget" name="datatable_moran">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>46</y>
+           <width>351</width>
+           <height>281</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="checkBox_Moran">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="geometry">
+          <rect>
+           <x>13</x>
+           <y>20</y>
+           <width>151</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Índice de Moran Global</string>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="checkBox_RFE">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="geometry">
+          <rect>
+           <x>450</x>
+           <y>5</y>
+           <width>171</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Seleção de Variáveis - (RFE)</string>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+        </widget>
+        <widget class="QTableWidget" name="datatable_RFE">
+         <property name="geometry">
+          <rect>
+           <x>402</x>
+           <y>27</y>
+           <width>271</width>
+           <height>300</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pushButton_SVM_Add_Selected_Features">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="geometry">
+          <rect>
+           <x>171</x>
+           <y>17</y>
+           <width>190</width>
+           <height>25</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Adicionar Variáveis Selecionadas</string>
+         </property>
+        </widget>
+       </widget>
+      </widget>
+      <widget class="QGroupBox" name="groupBox_SVM_Vars">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>40</y>
+         <width>480</width>
+         <height>145</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Seleção de Covariáveis</string>
+       </property>
+       <widget class="QComboBox" name="comboBox_SVM_Fonte">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="geometry">
+         <rect>
+          <x>110</x>
+          <y>27</y>
+          <width>190</width>
+          <height>25</height>
+         </rect>
+        </property>
+        <property name="currentIndex">
+         <number>0</number>
+        </property>
+        <item>
+         <property name="text">
+          <string>Tabela de Atributos</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Layer Externa</string>
+         </property>
+        </item>
+       </widget>
+       <widget class="QLabel" name="label_33">
+        <property name="geometry">
+         <rect>
+          <x>13</x>
+          <y>31</y>
+          <width>90</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Fonte:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_SVM_DenseLayer">
+        <property name="geometry">
+         <rect>
+          <x>13</x>
+          <y>69</y>
+          <width>90</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Layers QGIS:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+       <widget class="QgsMapLayerComboBox" name="mMapLayerComboBox_DenseLayer">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="geometry">
+         <rect>
+          <x>110</x>
+          <y>65</y>
+          <width>316</width>
+          <height>25</height>
+         </rect>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QGroupBox" name="groupBox_SVM">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>500</x>
+         <y>5</y>
+         <width>200</width>
+         <height>180</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Covariáveis disponíveis</string>
+       </property>
+       <widget class="QLabel" name="label_98">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>118</y>
+          <width>90</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Peso:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+       <widget class="QDoubleSpinBox" name="doubleSpinBox_Weight_IDW">
+        <property name="geometry">
+         <rect>
+          <x>120</x>
+          <y>117</y>
+          <width>70</width>
+          <height>22</height>
+         </rect>
+        </property>
+        <property name="minimum">
+         <double>0.250000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>3.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.250000000000000</double>
+        </property>
+        <property name="value">
+         <double>1.000000000000000</double>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_91">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>56</y>
+          <width>90</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Vizinhos:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="lineEdit_SVM_VBRaio">
+        <property name="geometry">
+         <rect>
+          <x>120</x>
+          <y>86</y>
+          <width>70</width>
+          <height>20</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="lineEdit_SVM_VBNumMax">
+        <property name="geometry">
+         <rect>
+          <x>120</x>
+          <y>56</y>
+          <width>70</width>
+          <height>20</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_92">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>87</y>
+          <width>90</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Raio:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+       <widget class="QComboBox" name="comboBox_SVM_Features">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="geometry">
+         <rect>
+          <x>68</x>
+          <y>23</y>
+          <width>120</width>
+          <height>23</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="pushButton_SVM_Add_Feature">
+        <property name="geometry">
+         <rect>
+          <x>40</x>
+          <y>149</y>
+          <width>120</width>
+          <height>25</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Adicionar Covariável</string>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QLabel" name="label_VTargetSVM">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>13</x>
+         <y>10</y>
+         <width>191</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Z:</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton_SVM">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>539</x>
+         <y>193</y>
+         <width>120</width>
+         <height>25</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Interpolar...</string>
+       </property>
+      </widget>
+     </widget>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="tab_4">
+    <attribute name="title">
+     <string>Zonas de Manejo</string>
+    </attribute>
+    <widget class="QTabWidget" name="tabWidget_ZM">
+     <property name="geometry">
+      <rect>
+       <x>5</x>
+       <y>10</y>
+       <width>730</width>
+       <height>500</height>
+      </rect>
+     </property>
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="tab_15">
+      <attribute name="title">
+       <string>Mapas Interpolados</string>
+      </attribute>
+      <widget class="QTableWidget" name="datatable_ZM_Maps">
+       <property name="geometry">
+        <rect>
+         <x>6</x>
+         <y>40</y>
+         <width>710</width>
+         <height>400</height>
+        </rect>
+       </property>
+       <property name="sizeIncrement">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="baseSize">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="alternatingRowColors">
+        <bool>true</bool>
+       </property>
+       <property name="rowCount">
+        <number>0</number>
+       </property>
+       <property name="columnCount">
+        <number>0</number>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton_ZM_Add_All_Vars_Selected">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>7</x>
+         <y>445</y>
+         <width>190</width>
+         <height>25</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Adicionar Variáveis Selecionadas</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton_ZM_Add_Var">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>210</x>
+         <y>445</y>
+         <width>190</width>
+         <height>25</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Adicionar Variáveis Externas</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_48">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>13</y>
+         <width>531</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Selecione os mapas interpolados abaixo para gerar as Zonas de Manejo</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="tab_9">
+      <attribute name="title">
+       <string>Variáveis para Gerar ZM</string>
+      </attribute>
+      <widget class="QTableWidget" name="datatable_ZM">
+       <property name="geometry">
+        <rect>
+         <x>6</x>
+         <y>96</y>
+         <width>710</width>
+         <height>360</height>
+        </rect>
+       </property>
+       <property name="sizeIncrement">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="baseSize">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="rowCount">
+        <number>0</number>
+       </property>
+       <property name="columnCount">
+        <number>0</number>
+       </property>
+      </widget>
+      <widget class="QGroupBox" name="groupBox_ZM_Remove_Var">
+       <property name="geometry">
+        <rect>
+         <x>6</x>
+         <y>12</y>
+         <width>710</width>
+         <height>60</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Variáveis para gerar Zonas de Manejo</string>
+       </property>
+       <widget class="QLabel" name="label_31">
+        <property name="geometry">
+         <rect>
+          <x>23</x>
+          <y>27</y>
+          <width>160</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Variáveis adicionadas:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="pushButton_ZM_Remove_Var">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="geometry">
+         <rect>
+          <x>316</x>
+          <y>26</y>
+          <width>110</width>
+          <height>23</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Remover Variável</string>
+        </property>
+       </widget>
+       <widget class="QComboBox" name="comboBox_ZM_var">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="geometry">
+         <rect>
+          <x>190</x>
+          <y>26</y>
+          <width>111</width>
+          <height>22</height>
+         </rect>
+        </property>
+       </widget>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="tab_8">
+      <attribute name="title">
+       <string>Gráfico de FPI/NCE</string>
+      </attribute>
+      <widget class="QLabel" name="label_ZM_FPI_NCE">
+       <property name="geometry">
+        <rect>
+         <x>16</x>
+         <y>96</y>
+         <width>690</width>
+         <height>360</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="scaledContents">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QGroupBox" name="groupBox_ZM_Calc_Nr_Ideal_ZM">
+       <property name="geometry">
+        <rect>
+         <x>6</x>
+         <y>12</y>
+         <width>710</width>
+         <height>60</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Índice de Performance Fuzzy (FPI) e Entropia de Classificação Normalizada (NCE)</string>
+       </property>
+       <widget class="QLineEdit" name="lineEdit_ZM_NCE">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="geometry">
+         <rect>
+          <x>179</x>
+          <y>25</y>
+          <width>50</width>
+          <height>20</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="pushButton_ZM_Calc_Nr_Ideal_ZM">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="geometry">
+         <rect>
+          <x>256</x>
+          <y>22</y>
+          <width>70</width>
+          <height>25</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Calcular...</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_23">
+        <property name="geometry">
+         <rect>
+          <x>8</x>
+          <y>26</y>
+          <width>40</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>FPI:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_24">
+        <property name="geometry">
+         <rect>
+          <x>134</x>
+          <y>26</y>
+          <width>40</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>NCE:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="lineEdit_ZM_FPI">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="geometry">
+         <rect>
+          <x>57</x>
+          <y>25</y>
+          <width>50</width>
+          <height>20</height>
+         </rect>
+        </property>
+       </widget>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="tab_10">
+      <attribute name="title">
+       <string>Mapa de Zonas de Manejo</string>
+      </attribute>
+      <widget class="QLabel" name="label_ZM">
+       <property name="geometry">
+        <rect>
+         <x>269</x>
+         <y>106</y>
+         <width>440</width>
+         <height>360</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="scaledContents">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QTableWidget" name="datatable_ZM_Classe">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>106</y>
+         <width>250</width>
+         <height>360</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_45">
+       <property name="geometry">
+        <rect>
+         <x>70</x>
+         <y>86</y>
+         <width>111</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Grid Zonas de Manejo</string>
+       </property>
+      </widget>
+      <widget class="QGroupBox" name="groupBox_ZM_Calcular">
+       <property name="geometry">
+        <rect>
+         <x>6</x>
+         <y>12</y>
+         <width>710</width>
+         <height>60</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Parâmetros para gerar Zonas de Manejo</string>
+       </property>
+       <widget class="QSpinBox" name="spinBox_ZM_Iter">
+        <property name="geometry">
+         <rect>
+          <x>180</x>
+          <y>25</y>
+          <width>50</width>
+          <height>22</height>
+         </rect>
+        </property>
+        <property name="minimum">
+         <number>2</number>
+        </property>
+        <property name="maximum">
+         <number>1000</number>
+        </property>
+        <property name="value">
+         <number>100</number>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="pushButton_ZM_Calcular">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="geometry">
+         <rect>
+          <x>630</x>
+          <y>25</y>
+          <width>70</width>
+          <height>25</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Gerar...</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_22">
+        <property name="geometry">
+         <rect>
+          <x>254</x>
+          <y>27</y>
+          <width>91</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Coef. Fuzzy:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_21">
+        <property name="geometry">
+         <rect>
+          <x>407</x>
+          <y>28</y>
+          <width>160</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Nº de zonas de manejo:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_20">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>25</y>
+          <width>165</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Nº máximo de iterações:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+       <widget class="QDoubleSpinBox" name="doubleSpinBox_ZM_CFuzzy">
+        <property name="geometry">
+         <rect>
+          <x>350</x>
+          <y>25</y>
+          <width>50</width>
+          <height>22</height>
+         </rect>
+        </property>
+        <property name="minimum">
+         <double>0.250000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>3.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.250000000000000</double>
+        </property>
+        <property name="value">
+         <double>1.250000000000000</double>
+        </property>
+       </widget>
+       <widget class="QSpinBox" name="spinBox_ZM_NrZonas">
+        <property name="geometry">
+         <rect>
+          <x>573</x>
+          <y>26</y>
+          <width>50</width>
+          <height>22</height>
+         </rect>
+        </property>
+        <property name="minimum">
+         <number>2</number>
+        </property>
+        <property name="maximum">
+         <number>10</number>
+        </property>
+        <property name="value">
+         <number>3</number>
+        </property>
+       </widget>
+      </widget>
+     </widget>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QLabel" name="label_language">
+   <property name="geometry">
+    <rect>
+     <x>540</x>
+     <y>0</y>
+     <width>80</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="text">
+    <string>Idioma:</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_language_PT">
+   <property name="geometry">
+    <rect>
+     <x>627</x>
+     <y>3</y>
+     <width>21</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="pixmap">
+    <pixmap>ICO_BRA.png</pixmap>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_language_USA">
+   <property name="geometry">
+    <rect>
+     <x>654</x>
+     <y>3</y>
+     <width>21</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="pixmap">
+    <pixmap>ICO_USA.png</pixmap>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_About">
+   <property name="geometry">
+    <rect>
+     <x>706</x>
+     <y>1</y>
+     <width>41</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="text">
+    <string>Sobre</string>
+   </property>
+  </widget>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QgsMapLayerComboBox</class>
+   <extends>QComboBox</extends>
+   <header>qgsmaplayercombobox.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
