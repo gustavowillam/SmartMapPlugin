@@ -7,7 +7,7 @@ Permite a interpolação dos dados utilizando Krigagem Ordinária e técnicas de
 Possibilita a interação com o QGIS a partir de layers (Shapefile e GeoTIFF). 
 O principal objetivo desse plugin é fornecer uma plataforma livre e open source, aliada às funções já existentes no QGIS. 
 Disponível para os Sistemas Operacionais Windows, Mac e Linux tendo como única dependência o QGIS instalado.
-Desenvolvido em Python 3, o plugin utiliza alguns pacotes já incorporados ao seu código como: scikit-learn, scikit-fuzzy, pysal e pyKrige.
+Desenvolvido em Python 3, o plugin utiliza alguns pacotes já incorporados ao seu código como: [scikit-learn](https://github.com/scikit-learn/scikit-learn), [scikit-fuzzy](https://github.com/scikit-fuzzy/scikit-fuzzy), [pysal](https://github.com/pysal) e [pyKrige](https://github.com/GeoStat-Framework/PyKrige).
 
 ## Como Instalar
 
@@ -16,7 +16,7 @@ Desenvolvido em Python 3, o plugin utiliza alguns pacotes já incorporados ao se
 O Plugin tentará instalar a biblioteca scikit-learn automaticamente, mas caso ocorra alguma falha, 
 abra o OSGeo4W Shell como administrador na pasta de atalhos do QGIS e digite os seguintes comandos:
 
-python -m pip install scikit-learn
+`python -m pip install scikit-learn`
 
 Se tiver algum erro do tipo: "PermissionError: [WinError 5] Access is denied", tente abrir o OsGeo Shell come administrador.
 Para que a instalação automática funcione, basta executar o Qgis como administrador e instalar o plugin.
