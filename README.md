@@ -77,6 +77,8 @@ QGIS (anteriormente conhecido como Quantum GIS) é um software livre com código
 
 [Python3](https://www.python.org/)
 
+[Qt5 API](https://doc.qt.io/qt-5)
+
 [Qgis 3.10.x python API](https://qgis.org/pyqgis/master/)
 
 [PyQGIS developer cookbook](https://docs.qgis.org/3.10/en/docs/pyqgis_developer_cookbook/index.html)
