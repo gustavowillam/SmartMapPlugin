@@ -55,6 +55,9 @@ Caso você queira reportar algum erro não se esqueça de:
 4.	Diga o que aconteceu e o que você esperava acontecer.
 5.	Se possível envie seu arquivo de projeto (zip e qgis) com as layers.
 
+Para reportar algum erro use a página [issues](https://github.com/gustavowillam/SmartMapPlugin/issues). 
+
+
 ## QGIS
 
 QGIS (anteriormente conhecido como Quantum GIS) é um software livre com código-fonte aberto, multiplataforma de sistema de informação geográfica (SIG) que permite a visualização, edição e análise de dados georreferenciados.
