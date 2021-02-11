@@ -123,12 +123,12 @@
         <translation>Sampled Points</translation>
     </message>
     <message>
-        <source>V.Obs.</source>
-        <translation>V.Obs.</translation>
+        <source>Z.Obs.</source>
+        <translation>Z.Obs.</translation>
     </message>
     <message>
-        <source>V. Predito</source>
-        <translation>V. Predicted</translation>
+        <source>Z.Predito</source>
+        <translation>Z.Predicted</translation>
     </message>
 
     <message>
@@ -693,8 +693,8 @@
         <translation>Or save the current project before running the Smart-Map plugin.</translation>
    </message>	
    <message>
-        <source>Exibir Gráficos e Mapas</source>
-        <translation>Display Graphs and Maps</translation>
+        <source>Exibir Gráficos e Mapas em uma janela externa</source>
+        <translation>Display Graphs and Maps in an external window</translation>
    </message>      
    <message>
         <source>Pares de</source>
@@ -741,8 +741,8 @@
         <translation>Primary Variable (Z) must be different from Y Coordinate.</translation>
    </message>  
    <message>
-        <source>Duplo click nos parâmetros abaixo para carregá-los</source>
-        <translation>Double click on the parameters below to load</translation>
+        <source>Duplo click nos parâmetros para carregá-los</source>
+        <translation>Double click on parameters to load</translation>
    </message>  
    <message>
         <source>Deseja substituir o semivariograma de: </source>
@@ -753,8 +753,8 @@
         <translation>Saved Parameters</translation>
    </message>  
    <message>
-        <source>Interpolar Variáveis Selecionadas</source>
-        <translation>Interpolate Selected Variables</translation>
+        <source>Interpolar Variáveis Selecionadas...</source>
+        <translation>Interpolate Selected Variables...</translation>
    </message>  
    <message>
         <source>Salvar Parâmetros...</source>
