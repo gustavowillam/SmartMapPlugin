@@ -13,33 +13,56 @@ Desenvolvido em Python 3, o plugin utiliza alguns pacotes já incorporados ao se
 
 ### Dependências 
 
+#### Windows
+
 O Plugin tentará instalar a biblioteca scikit-learn automaticamente, mas caso ocorra alguma falha, 
 abra o OSGeo4W Shell como administrador na pasta de atalhos do QGIS e digite os seguintes comandos:
 
 `python -m pip install scikit-learn`
 
 Se tiver algum erro do tipo: "PermissionError: [WinError 5] Access is denied", tente abrir o OsGeo Shell come administrador.
-Para que a instalação automática funcione, basta executar o Qgis como administrador e instalar o plugin.
+
+#### Linux
+
+No QGIS abra o Terminal Python e verifique se as bibliotecas python: scipy, pandas e sklearn estão instaladas.
+Para verificar utilize os seguintes comandos:
+
+`import pandas`
+
+`import scipy`
+
+`import sklearn`
+
+Para cada linha de comando, digite o comando e tecle enter. Se ocorrer um erro ao tentar importar a biblioteca faça a instalação 
+através do terminal Linux. 
+
+No terminal Linux utilize os seguintes comandos para instalar as bibliotecas python: 
+
+Para instalar a biblioteca pandas: `python -m pip install pandas` ou `pip3 install pandas`
+
+Para instalar a biblioteca scipy: `python -m pip install scipy` ou `pip3 install scipy`
+
+Para instalar a biblioteca sklearn: `python -m pip install scikit-learn` ou `pip3 install scikit-learn`
+
+Caso estes comandos não funcionem, verifique qual é a sua distribuição Linux e pesquise na internet como instalar bibliotecas python no Linux. 
 
 ### Instalação Ideal
 
+#### Windows
+
 Procure pelo nome Smart-Map no repositório oficial do Qgis (Plugins -> Intalar plugins) e clique em instalar.  
+
+#### Linux
+
+Antes de procurar no repositório oficial do QGIS, certifique-se que as bibliotecas python: scipy, pandas e sklearn estão instaladas.
+Siga as instruções descritas acima, em como instalar dependencias . 
+Após certificar que as bibliotecas estão instaladas, procure pelo nome Smart-Map no repositório oficial do Qgis (Plugins -> Intalar plugins) e clique em instalar.  
 
 ### Instalação Manual
 
 1.	Baixe o arquivo Smart_Map.zip na página de [releases](https://github.com/gustavowillam/SmartMapPlugin/releases)  ou nesse [link](https://github.com/gustavowillam/SmartMapPlugin/releases/download/v1.0/Smart_Map.zip)
 2.	Abra o Qgis 3, entre no menu Plugins->Manage and Install Plugins->Install From Zip File
 3.	Na linha zip file, clique no botão "..." e escolha o arquivo zip baixado do plugin.
-
-### Instalação "Forçada"
-
-Coloque estes arquivos dentro da pasta Smart_Map ou crie essa pasta, no caminho:
-
-Linux: ~/.qgis/plugins/python/
-
-Windows: C:\Users\USER\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins
-
-onde USER é seu nome de usuário
 
 ## Manual de Utilização 
 
