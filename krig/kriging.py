@@ -126,12 +126,12 @@ class OrdinaryKriging:
             for j in gridy:
                 # if point it is internal of contour and contour it is definided
                 if has_contour:
-                    if contours.contains_point((i,j)):
-                        gridxy.append([i,j])
+                    if contours.contains_point((i+(pixel_x/2),j-(pixel_y/2))):
+                        gridxy.append([i+(pixel_x/2),j-(pixel_y/2)])
                 
                 #if has_countor is not defined
                 else :
-                    gridxy.append([i,j])
+                    gridxy.append([i+(pixel_x/2),j-(pixel_y/2)])
                     
         
         #return a nx2 array with pair of point internal of contour

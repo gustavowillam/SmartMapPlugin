@@ -28,7 +28,7 @@ import zipfile
 #from pip._internal import main
 #import ctypes
 #import time   
-#from qgis.PyQt.QtWidgets import QMessageBox, QProgressDialog
+from qgis.PyQt.QtWidgets import QMessageBox
 #from qgis.PyQt import QtCore
 
 
@@ -40,13 +40,14 @@ print('\nOperation System:', system)
 #    sys.path.append(plugin_dir)
 
 
-requirements=["scikit-learn", "pandas", "pyKrige", "pysal", "scikit-fuzzy", "scikit-optimize"]
+requirements=["scipy", "pandas", "scikit-learn", "pyKrige", "pysal", "scikit-fuzzy", "scikit-optimize"]
 
 
 #dica web para instalar external libs 
 #https://gis.stackexchange.com/questions/196002/development-of-a-plugin-which-depends-on-an-external-python-library
 
 
+#Windows 
 #C:\Program Files\QGIS 3.10\apps\Python37\Lib\site-packages                                            #local de instalação das libs do plugin via OSGEO4W
 
 #C:\Users\Gustavo\AppData\Roaming\Python\Python37\site-packages                                        #local de instalação das libs do plugin via arquivo bach     
@@ -54,6 +55,8 @@ requirements=["scikit-learn", "pandas", "pyKrige", "pysal", "scikit-fuzzy", "sci
 #C:\Users\Gustavo\AppData\Roaming\QGIS\QGIS3\profiles\default\python\site-packages                     #local de instalação das libs do plugin via install_deps
 
 
+#Linux
+#/home/gustavo/.local/lib/python3.8/site-packages/                                                     #local de instalação das libs do plugin via terminal
 
 def unzip_external_package(library_name, path_to_zip_file, directory_to_extract_to): 
 
@@ -126,13 +129,43 @@ def install_external_package(library_name, library_version, exec_number, unzip):
 
 print("\nChecking dependencies!")
 
+
+#scipy
+try:
+    import scipy
+    print("scipy        already installed. version: " + scipy.__version__ + " Locale:" + scipy.__file__)    
+
+#except ModuleNotFoundError: 
+except Exception:
+
+    msg_box = QMessageBox()
+    msg_box.setIcon(QMessageBox.Warning)
+    msg_box.setText('scipy library not found. Please go to github: https://github.com/gustavowillam/SmartMapPlugin and see how to install python libraries.')
+    msg_box.exec_()
+
+
+#pandas
+try:
+    import pandas
+    print("pandas       already installed. version: " + pandas.__version__ + " Locale:" + pandas.__file__)    
+
+#except ModuleNotFoundError: 
+except Exception:
+
+    msg_box = QMessageBox()
+    msg_box.setIcon(QMessageBox.Warning)
+    msg_box.setText('pandas library not found. Please go to github: https://github.com/gustavowillam/SmartMapPlugin and see how to install python libraries.')
+    msg_box.exec_()
+
+
+
 #sklearn 
 try:
     import sklearn
     print("scikit-learn already installed. version: " + sklearn.__version__ + " Locale:" + sklearn.__file__)    
 
-except ModuleNotFoundError: 
-
+#except ModuleNotFoundError: 
+except Exception:
 
     file_dir = os.path.dirname(os.path.abspath(__file__))                                   #get the directory of currenty file python in execute
 
@@ -152,8 +185,16 @@ except ModuleNotFoundError:
 
 
     #install_external_package('sklearn', dep, exec_number, unzip=True)
-       
-    load_external_package(    'sklearn', dep, exec_number, unzip=True)
+
+    if system == 'Windows':                                                                #install if SO is Windows, else user must install sklearn via cmd.   
+        load_external_package('sklearn', dep, exec_number, unzip=True)
+
+    else:        
+
+        msg_box = QMessageBox()
+        msg_box.setIcon(QMessageBox.Warning)
+        msg_box.setText('sklearn library not found. Please go to github: https://github.com/gustavowillam/SmartMapPlugin and see how to install python libraries.')
+        msg_box.exec_()
         
         
 print("Dependencies checked!")

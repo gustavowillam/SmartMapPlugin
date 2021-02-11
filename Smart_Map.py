@@ -3228,6 +3228,7 @@ class smart_map:
         
     def pushButton_Krigagem_clicked(self):
         
+
         if self.Variogram == False: 
             
             #mensagem de retorno ao usuário 
@@ -3353,7 +3354,7 @@ class smart_map:
     
                 cols = [] 
                 cols = list(df_pontos_interpolados_OK.columns.values)                        
-                cols[2] = 'Z.Predito'                 
+                cols[2] = self.tr('Z.Predito')
                 self.dlg.datatable_pontos_interpolados_OK.setHorizontalHeaderLabels(cols)
     
             except AttributeError: 
@@ -3836,8 +3837,11 @@ class smart_map:
 
             
             #regression part  with sklearn.linear_model import LinearRegression
-            RMSE_lib, R2_RCV, regressor = functions.calculate_statistics(labels_OK_CV, labels)
+            RMSE_lib, R2_RCV, regressor, R2_Elp, lccc = functions.calculate_statistics(labels_OK_CV, labels)
             
+            #print('R2_Elp: ', R2_Elp)
+            #print('lccc: ', lccc)
+
             RMSE_lib = '%.3f' % (RMSE_lib)   
             R2_RCV = '%.3f' % (R2_RCV) 
 
@@ -4420,7 +4424,7 @@ class smart_map:
                 lista_xy = []
                 for i in range(len(self.gridx)):
                     for j in range(len(self.gridy)): 
-                        lista_xy.append([self.gridx[i], self.gridy[j]])   
+                        lista_xy.append([self.gridx[i]+(self.Pixel_Size_X/2), self.gridy[j]-(self.Pixel_Size_Y/2)])   
                         cont = cont + 1 
                         progress.setValue(cont)                        
                         if progress.wasCanceled():                          
@@ -4780,7 +4784,7 @@ class smart_map:
                         cont = 1       
                         for i in range(len(self.gridx)):
                             for j in range(len(self.gridy)): 
-                                ponto = (self.gridx[i], self.gridy[j])
+                                ponto = (self.gridx[i]+(self.Pixel_Size_X/2), self.gridy[j]-(self.Pixel_Size_Y/2))
                                 if bbPath.contains_point(ponto): 
                                     lista.append([z[i,j]])   
                                 cont = cont + 1 
@@ -5139,7 +5143,7 @@ class smart_map:
                         cont = 1       
                         for i in range(len(self.gridx)):
                             for j in range(len(self.gridy)): 
-                                ponto = (self.gridx[i], self.gridy[j])
+                                ponto = (self.gridx[i]+(self.Pixel_Size_X/2), self.gridy[j]-(self.Pixel_Size_X/2))
                                 if bbPath.contains_point(ponto): 
                                     lista.append([z[i,j]])   
                                 cont = cont + 1 
@@ -5543,7 +5547,7 @@ class smart_map:
     
                 cols = [] 
                 cols = list(df_pontos_interpolados_SVM.columns.values)  
-                cols[2] = 'Z.Predito'
+                cols[2] = self.tr('Z.Predito')
                 self.dlg.datatable_pontos_interpolados_SVM.setHorizontalHeaderLabels(cols)
     
             except AttributeError: 
@@ -5896,7 +5900,10 @@ class smart_map:
             #plotar o gráfico da validação cruzada 
                 
             #regression part  with sklearn.linear_model import LinearRegression
-            RMSE_lib, R2_RCV, regressor = functions.calculate_statistics(labels_SVM_CV, labels)
+            RMSE_lib, R2_RCV, regressor, R2_Elp, lccc = functions.calculate_statistics(labels_SVM_CV, labels)
+
+            #print('R2_Elp: ', R2_Elp)
+            #print('lccc: ', lccc)
 
             
             RMSE_lib = '%.3f' % (RMSE_lib)   

@@ -215,6 +215,48 @@ def svr_param_selection_optimize(norm, features, labels, kfolds):
    
     return results.x[0], results.x[1] 
 '''  
+def concordance_correlation_coefficient(y_true, y_pred, sample_weight=None,  multioutput='uniform_average'):
+    """Concordance correlation coefficient.
+    The concordance correlation coefficient is a measure of inter-rater agreement.
+    It measures the deviation of the relationship between predicted and true values
+    from the 45 degree angle.
+    Read more: https://en.wikipedia.org/wiki/Concordance_correlation_coefficient
+    Original paper: Lawrence, I., and Kuei Lin. "A concordance correlation coefficient to evaluate reproducibility." Biometrics (1989): 255-268.  
+    Parameters
+    ----------
+    y_true : array-like of shape = (n_samples) or (n_samples, n_outputs)
+        Ground truth (correct) target values.
+    y_pred : array-like of shape = (n_samples) or (n_samples, n_outputs)
+        Estimated target values.
+    Returns
+    -------
+    loss : A float in the range [-1,1]. A value of 1 indicates perfect agreement
+    between the true and the predicted values.
+    Examples
+    --------
+    >>> from sklearn.metrics import concordance_correlation_coefficient
+    >>> y_true = [3, -0.5, 2, 7]
+    >>> y_pred = [2.5, 0.0, 2, 8]
+    >>> concordance_correlation_coefficient(y_true, y_pred)
+    0.97678916827853024
+    """
+   
+    cor=np.corrcoef(y_true,y_pred)[0][1]
+    
+    mean_true=np.mean(y_true)
+    mean_pred=np.mean(y_pred)
+    
+    var_true=np.var(y_true)
+    var_pred=np.var(y_pred)
+    
+    sd_true=np.std(y_true)
+    sd_pred=np.std(y_pred)
+    
+    numerator=2*cor*sd_true*sd_pred
+    
+    denominator=var_true+var_pred+(mean_true-mean_pred)**2
+
+    return abs(numerator/denominator)
     
 
 
@@ -230,8 +272,16 @@ def calculate_statistics(labels_CV, labels):
     EAM = 0
     #RMSE = 0 
 
+    num_tot = 0   #calculo de R2 Elp 
+    den_tot = 0   #calculo de R2 Elp
+
     for j in range(len(labels)):
 
+        num = (labels_CV[j] - mean_labels)**2
+        den = (labels[j] - mean_labels)**2
+        num_tot = num_tot + num 
+        den_tot  = den_tot + den        
+        
         SQt = (labels[j]-mean_labels)**2
         SQTot = SQTot + SQt 
 
@@ -292,10 +342,16 @@ def calculate_statistics(labels_CV, labels):
 
     #To retrieve the R2 da regressão:
     R2_RCV = regressor.score(labels_CV_2d.reshape(-1,1), labels_2d.reshape(-1,1))  #mede o score (R2) da validação cruzada 
-   
-       
+
+    if den_tot > 0: 
+        R2_Elp = num_tot / den_tot  
+    else: 
+        R2_Elp = 0
+  
+    lccc = 0 #concordance_correlation_coefficient(labels.reshape(-1), labels_CV.reshape(-1))  #Lins concordance        
+    
     #return R2_lib, EM_lib, EAM_lib, RMSE_lib, Curtose,  R2_RCV
-    return RMSE_lib, R2_RCV, regressor 
+    return RMSE_lib, R2_RCV, regressor, R2_Elp, lccc 
 
 
 ###############################################################################
