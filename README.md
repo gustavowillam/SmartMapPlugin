@@ -20,7 +20,7 @@ abra o OSGeo4W Shell como administrador na pasta de atalhos do QGIS e digite os 
 
 `python -m pip install scikit-learn`
 
-Se tiver algum erro do tipo: "PermissionError: [WinError 5] Access is denied", tente abrir o OsGeo Shell come administrador.
+Se tiver algum erro do tipo: "PermissionError: [WinError 5] Access is denied", tente abrir o OsGeo Shell como administrador.
 
 #### Linux
 
@@ -55,7 +55,7 @@ Procure pelo nome Smart-Map no repositório oficial do Qgis (Plugins -> Intalar 
 #### Linux
 
 Antes de procurar no repositório oficial do QGIS, certifique-se que as bibliotecas python: scipy, pandas e sklearn estão instaladas.
-Siga as instruções descritas acima, em como instalar dependencias . 
+Siga as instruções descritas acima, em como instalar dependencias para Linux. 
 Após certificar que as bibliotecas estão instaladas, procure pelo nome Smart-Map no repositório oficial do Qgis (Plugins -> Intalar plugins) e clique em instalar.  
 
 ### Instalação Manual
