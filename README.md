@@ -60,7 +60,7 @@ Após certificar que as bibliotecas estão instaladas, procure pelo nome Smart-M
 
 ### Instalação Manual
 
-1.	Baixe o arquivo Smart_Map.zip na página de [releases](https://github.com/gustavowillam/SmartMapPlugin/releases)  ou nesse [link](https://github.com/gustavowillam/SmartMapPlugin/releases/download/v1.0/Smart_Map.zip)
+1.	Baixe o arquivo Smart_Map.zip na página de [releases](https://github.com/gustavowillam/SmartMapPlugin/releases)
 2.	Abra o Qgis 3, entre no menu Plugins->Manage and Install Plugins->Install From Zip File
 3.	Na linha zip file, clique no botão "..." e escolha o arquivo zip baixado do plugin.
 
