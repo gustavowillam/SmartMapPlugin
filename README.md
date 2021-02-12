@@ -33,7 +33,7 @@ Para verificar utilize os seguintes comandos:
 
 `import sklearn`
 
-Para cada linha de comando, digite o comando e tecle enter. Se ocorrer um erro ao tentar importar a biblioteca faça a instalação 
+Para cada linha de comando, digite o comando e tecle enter. Se ocorrer o erro: ModuleNotFoundError, ao tentar importar a biblioteca faça a instalação 
 através do terminal Linux. 
 
 No terminal Linux utilize os seguintes comandos para instalar as bibliotecas python: 
