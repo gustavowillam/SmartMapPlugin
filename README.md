@@ -6,7 +6,7 @@ Plugin para QGIS 3.10.x que possibilita a predição e o mapeamento de atributos
 Permite a interpolação dos dados utilizando Krigagem Ordinária e técnicas de Machine Learning. Neste plugin foi implementado o Support Vector Machine (SVM). 
 Possibilita a interação com o QGIS a partir de layers (Shapefile e GeoTIFF). 
 O principal objetivo desse plugin é fornecer uma plataforma livre e open source, aliada às funções já existentes no QGIS. 
-Disponível para os Sistemas Operacionais Windows, Mac e Linux tendo como única dependência o QGIS instalado.
+Disponível para os Sistemas Operacionais Windows, Linux e Mac tendo como única dependência o QGIS instalado.
 Desenvolvido em Python 3, o plugin utiliza alguns pacotes já incorporados ao seu código como: [scikit-learn](https://github.com/scikit-learn/scikit-learn), [scikit-fuzzy](https://github.com/scikit-fuzzy/scikit-fuzzy), [pysal](https://github.com/pysal) e [pyKrige](https://github.com/GeoStat-Framework/PyKrige).
 
 ## Como Instalar
@@ -22,7 +22,7 @@ abra o OSGeo4W Shell como administrador na pasta de atalhos do QGIS e digite os 
 
 Se tiver algum erro do tipo: "PermissionError: [WinError 5] Access is denied", tente abrir o OsGeo Shell como administrador.
 
-#### Linux
+#### Linux e MacOS
 
 No QGIS abra o Terminal Python e verifique se as bibliotecas python: scipy, pandas e sklearn estão instaladas.
 Para verificar utilize os seguintes comandos:
@@ -34,9 +34,9 @@ Para verificar utilize os seguintes comandos:
 `import sklearn`
 
 Para cada linha de comando, digite o comando e tecle enter. Se ocorrer o erro: ModuleNotFoundError, ao tentar importar a biblioteca faça a instalação 
-através do terminal Linux. 
+através do terminal Linux/MacOS ou pelo OsGeo Shell do QGIS. 
 
-No terminal Linux utilize os seguintes comandos para instalar as bibliotecas python: 
+No terminal Linux ou MacOS utilize os seguintes comandos para instalar as bibliotecas python: 
 
 Para instalar a biblioteca pandas: `python -m pip install pandas` ou `pip3 install pandas`
 
@@ -44,7 +44,7 @@ Para instalar a biblioteca scipy: `python -m pip install scipy` ou `pip3 install
 
 Para instalar a biblioteca sklearn: `python -m pip install scikit-learn` ou `pip3 install scikit-learn`
 
-Caso estes comandos não funcionem, verifique qual é a sua distribuição Linux e pesquise na internet como instalar bibliotecas python no Linux. 
+Caso estes comandos não funcionem, verifique qual é a sua distribuição Linux ou MacOS e pesquise na internet como instalar bibliotecas python no Linux ou MacOS. 
 
 ### Instalação Ideal
 
@@ -52,10 +52,10 @@ Caso estes comandos não funcionem, verifique qual é a sua distribuição Linux
 
 Procure pelo nome Smart-Map no repositório oficial do Qgis (Plugins -> Intalar plugins) e clique em instalar.  
 
-#### Linux
+#### Linux e MacOs
 
 Antes de procurar no repositório oficial do QGIS, certifique-se que as bibliotecas python: scipy, pandas e sklearn estão instaladas.
-Siga as instruções descritas acima, em como instalar dependencias para Linux. 
+Siga as instruções descritas acima, em como instalar dependencias para Linux e MacOS. 
 Após certificar que as bibliotecas estão instaladas, procure pelo nome Smart-Map no repositório oficial do Qgis (Plugins -> Intalar plugins) e clique em instalar.  
 
 ### Instalação Manual
