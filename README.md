@@ -2,11 +2,11 @@
 
 ## Descrição
 
-Plugin para QGIS 3.10.x que possibilita a predição e o mapeamento de atributos do solo. 
+Plugin para QGIS 3.10.x 64 bits que possibilita a predição e o mapeamento de atributos do solo. 
 Permite a interpolação dos dados utilizando Krigagem Ordinária e técnicas de Machine Learning. Neste plugin foi implementado o Support Vector Machine (SVM). 
 Possibilita a interação com o QGIS a partir de layers (Shapefile e GeoTIFF). 
 O principal objetivo desse plugin é fornecer uma plataforma livre e open source, aliada às funções já existentes no QGIS. 
-Disponível para os Sistemas Operacionais Windows, Linux e Mac tendo como única dependência o QGIS instalado.
+Disponível para os Sistemas Operacionais Windows, Linux e Mac tendo como única dependência o QGIS 3.10.x 64 bits instalado.
 Desenvolvido em Python 3, o plugin utiliza alguns pacotes já incorporados ao seu código como: [scikit-learn](https://github.com/scikit-learn/scikit-learn), [scikit-fuzzy](https://github.com/scikit-fuzzy/scikit-fuzzy), [pysal](https://github.com/pysal) e [pyKrige](https://github.com/GeoStat-Framework/PyKrige).
 
 ## Como Instalar
