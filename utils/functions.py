@@ -456,6 +456,29 @@ def eliminar_outlier(df, colname):
     return df
 
 
+def localizar_outlier(df, colname):
+
+    list_index_outlier =  []    
+
+    if (colname != 'ID') and (colname != 'x') and (colname != 'y'):
+        #z_min  = df[v_target].min()
+        #z_max  = df[v_target].max()
+        z_mean = df[colname].mean()  #media
+        z_std  = df[colname].std()   #desvio padrao
+        #z_var  = df[v_target].var() #coeficiente de variação
+        
+        z_corte_min = z_mean - 2.5 * z_std
+        z_corte_max = z_mean + 2.5 * z_std 
+           
+        list_index_outlier =  []
+        for i in range(len(df)):
+            if ((df.iloc[i][colname] < z_corte_min) or (df.iloc[i][colname] > z_corte_max)): 
+                 list_index_outlier.append(i)
+                 
+        
+
+    return list_index_outlier
+
 
 ###############################################################################
 #Selected Features - Recursive Feature Elimination 

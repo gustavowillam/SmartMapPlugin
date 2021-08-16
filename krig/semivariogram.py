@@ -24,21 +24,30 @@ import pandas as pd
 import itertools as it
 from scipy import spatial
 from . import variogram_models
+import platform
 
 
 file_dir = os.path.dirname(os.path.abspath(__file__))                          #get the directory of currenty file python in execute
-
 name_log = 'log.txt'
 
-f = open(os.path.join(file_dir, name_log), 'w')                                #open(name_log, "w")
-f.write('\nArquivo de Log SmartMap\n')
-f.close()
 
 def Log(msg):
     
     f = open(os.path.join(file_dir, name_log), "a")
     f.write(msg+'\n')
     f.close()
+
+
+system = platform.system()  #[Windows, Linux, Darwin]
+
+   
+if system != 'Darwin':  #MacOS apresenta erro ao gravar em arquivo txt o log do semivarigrama    
+
+    
+    f = open(os.path.join(file_dir, name_log), 'w')                                #open(name_log, "w")
+    f.write('\nArquivo de Log SmartMap\n')
+    f.close()
+
 
 class Semivariogram:
     
@@ -66,8 +75,9 @@ class Semivariogram:
 
         """
         
-        Log('\nIniciando Geração do Semivariograma\n')
-        
+        if system != 'Darwin':  #MacOS apresenta erro ao gravar em arquivo txt o log do semivarigrama    
+            Log('\nIniciando Geracao do Semivariograma\n')
+
         
         #Constroe um banco de dados no pandas
         self.var=pd.DataFrame().astype('float32')
@@ -82,45 +92,57 @@ class Semivariogram:
         self.max_dist=self.var['lag'].max()
         #Calcula a Variancia da Amostra
         self.sample_variance=z.var()        
- 
-    
-    def Exp_Semiv(self, dist_lag,act_dist): # 
+
+        #Ordena em ordem crescente de acordo com a distância
+        #O vetor gamam acompanha a ordenação
+        self.var=self.var.sort_values(by='lag',ignore_index=True) #o index não é atualizado
+   
+         
+		
+    def Exp_Semiv(self, dist_lag, active_dist):  
         
         """
         Função para gerar o semivariograma experimental, com base nos ponto xy e no valor de atributo z
-        dist_lag é o comprimento do lag definido pelo usuário
+       
+        #dist lag é a distância que define os grups de distancias
         
+       
         Retorna o vetor de distância média, a semivariância e o número de pontos usados para construir
         o semivarigorama
-        """
-        var=self.var
-        
-        #Ordena em ordem crescente de acordo com a distância
-        #O vetor gamam acompanha a ordenação
-        var=var.sort_values(by='lag')
+       
+       
+       """
+
         #Remove os pontos com distância > distância ativa
-        remove_index=var[var['lag'] > act_dist ].index
-        var=var.drop(remove_index)
-        
+        remove_index=self.var[self.var['lag'] > active_dist ].index
+        #O vetor se as distâncias maiores que o defenido pelo usuário
+        #são salvos em outro vetor
+        self.var=self.var.drop(remove_index)
+
+        # a distância do lag (h) padrão é 
         #Vetor para classificar as distância
-        #Mudança :Agora distância inicia na Mimima Distancia. Antes era Zero
-        #bins=np.arange(0,max(var['lag']), dist_lag)
-        bins=np.arange(self.min_dist,max(var['lag']), dist_lag)
+
+        bins=np.arange(self.min_dist,max(self.var['lag']), dist_lag)
 
         #Classifica as distâncias conforme o vetor
-        ind = np.digitize(var['lag'],bins)
+        ind = np.digitize(self.var['lag'],bins)
         
         #Agrupa o vetor de distâncias , obtendo-se o valor médio
-        lag=var['lag'].groupby(ind).mean()
-        self.lag=lag.to_numpy() #convert pandas series to numpy
+        lag=self.var['lag'].groupby(ind).mean()
+        
         #group gamma e calculate mean()/2, acoording matheron estimator
         #agrupa as semivariâncias, obtendo o indice de matheron
         
-        gamma=var['gamma'].groupby(ind).mean().div(2)
+        gamma=self.var['gamma'].groupby(ind).mean().div(2)
+
+        #obtem o número de pares de pontos usado para construir cada lag
+        npoints=self.var['lag'].groupby(ind).count()
+
+        
+        #
+        self.lag=lag.to_numpy() #convert pandas series to numpy
         self.gamma=gamma.to_numpy() #convert pandas series to numpy
         
-        #obtem o número de pares de pontos usado para construir cada lag
-        npoints=var['lag'].groupby(ind).count()
         
         #retorna ao usuario
         return self.lag.astype('float32'),self.gamma.astype('float32'),npoints
@@ -202,7 +224,8 @@ class Semivariogram:
         #
         for model in list_model:
 
-            Log('\n\nPara o modelo:'+ model+'\n')
+            if system != 'Darwin':  #MacOS apresenta erro ao gravar em arquivo txt o log do semivarigrama    
+                Log('\n\nPara o modelo:'+ model+'\n')
 
             check=True #option of curve_fit to check finite values
 
@@ -211,15 +234,18 @@ class Semivariogram:
             #First using Curve Fit and Check_Finite=True
             try:
                 #
-                Log('Usando Curve Fit and Check_Finite:'+ str(check))
-                
-                Log('\nChutes Iniciais : Nugget: '+str(Nugget)+'  Sill: '+str(Sill)+ '  Range: '+str(Range))
 
-                Log('\nlag , Gamma')
+                if system != 'Darwin':  #MacOS apresenta erro ao gravar em arquivo txt o log do semivarigrama    
                 
-                for i in range(len(lag)): 
+                    Log('Usando Curve Fit and Check_Finite:'+ str(check))
                     
-                    Log (str(lag[i]) +',' +str(gamma[i]))
+                    Log('\nChutes Iniciais : Nugget: '+str(Nugget)+'  Sill: '+str(Sill)+ '  Range: '+str(Range))
+    
+                    Log('\nlag , Gamma')
+                
+                    for i in range(len(lag)): 
+                        
+                        Log (str(lag[i]) +',' +str(gamma[i]))
 
                 #return Nugget, Range , Sill and estimated covariance (not used)
                 [Nugget,Range,Sill], _ = curve_fit(func, lag, gamma,method='trf', check_finite = check, p0=self.init_vals ,bounds=(0, maxlim) )
@@ -255,22 +281,25 @@ class Semivariogram:
                     
             #except RuntimeError:
 
-                Log('Error at Curve Fit: least-squares minimization fails. Change to Golden Rule')
-                 
-                Log('Chutes Iniciais : Nugget: '+str(Nugget)+' Sill: '+str(Sill)+ ' Range: '+str(Range))
-                 
-                Log ('\nlag , Gamma')
-                
-                for i in range(len(lag)): 
+                if system != 'Darwin':  #MacOS apresenta erro ao gravar em arquivo txt o log do semivarigrama    
+
+                    Log('Error at Curve Fit: least-squares minimization fails. Change to Golden Rule')
+                     
+                    Log('Chutes Iniciais : Nugget: '+str(Nugget)+' Sill: '+str(Sill)+ ' Range: '+str(Range))
+                     
+                    Log ('\nlag , Gamma')
                     
-                    Log (str(lag[i]) +',' +str(gamma[i]))
+                    for i in range(len(lag)): 
+                        
+                        Log (str(lag[i]) +',' +str(gamma[i]))
 
                 Nugget,Range,Sill = self.Gold_Rule(model)
               
           
             else:
 
-                Log('Nenhum erro na Curve Fit ')
+                if system != 'Darwin':  #MacOS apresenta erro ao gravar em arquivo txt o log do semivarigrama                    
+                    Log('Nenhum erro na Curve Fit ')
                 
             finally:
 
@@ -278,7 +307,9 @@ class Semivariogram:
                 _,rss,r2=self.Gamma(model,[Nugget,Range,Sill])
                 dict_results [model]  = [Nugget,Range,Sill,rss,r2]
         
-        Log('\nAjuste Finalizado\n')
+        if system != 'Darwin':  #MacOS apresenta erro ao gravar em arquivo txt o log do semivarigrama    
+            Log('\nAjuste Finalizado\n')
+
         return dict_results
     
     
@@ -406,7 +437,9 @@ class Semivariogram:
                 if ((j >= imaxit) or (error < es)) : break
                     
                    
-        Log("Ajuste com sucesso Usando a Gold Rule")
+        if system != 'Darwin':  #MacOS apresenta erro ao gravar em arquivo txt o log do semivarigrama    
+            Log("Ajuste com sucesso Usando a Gold Rule")
+        
         return Nugget,Range,Sill
     
 

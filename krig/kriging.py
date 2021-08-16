@@ -237,8 +237,8 @@ class OrdinaryKriging:
                  dist=dist_4n[i]
 
    
-             #Na matrix a (c), seleciona a covariancia dos pontos que são vizinhos
-             #no ponto i
+            #Na matrix a (c), seleciona a covariancia dos pontos que são vizinhos
+            #no ponto i
             a_selector = np.concatenate((ids, np.array([a_all.shape[0] - 1])))
             a = a_all[a_selector[:, None], a_selector]
              

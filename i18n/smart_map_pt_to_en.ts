@@ -904,5 +904,17 @@
         <source>Deseja salvar os pontos reamostrados em uma nova layer Qgis?</source>
         <translation>Do you want to save the resampled points in a new Qgis layer?</translation>
     </message>		
+    <message>
+        <source>Eliminar Outliers</source>
+        <translation>Eliminate Outliers</translation>
+    </message>			
+    <message>
+        <source>O Sistema de Coordenadas Geográficas deve estar em UTM.</source>
+        <translation>The Geographical Coordinate System must be in UTM.</translation>
+    </message>			
+    <message>
+        <source>Realize a conversão da layer de entrada para a projeção UTM antes de importá-la no Smart-Map.</source>
+        <translation>Perform input layer conversion to UTM projection before importing it into Smart-Map.</translation>
+    </message>			
 	</context>
 </TS>
