@@ -27,7 +27,7 @@
 from qgis.PyQt import QtCore, QtWidgets, QtGui 
 from qgis.PyQt.QtCore import QTranslator, QCoreApplication, QVariant #, QSettings, qVersion
 from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox, QTableWidgetItem, QProgressDialog
-from qgis.PyQt.QtGui import QIcon, QPixmap, QColor 
+from qgis.PyQt.QtGui import QIcon, QPixmap, QColor, QBrush 
 
 from qgis.core import QgsProject             #get the directory for project QGIS  
 from qgis.core import QgsProcessingFeedback  #generate LayerRaster Clipped 
@@ -63,12 +63,19 @@ import re
 import time             
 import subprocess          
 import math 
-from PIL import Image  
+import platform
+
+system = platform.system()  #[Windows, Linux, Darwin]
+
+if system != 'Darwin':  #PIL do not is install in MacOS  
+    from PIL import Image  
+
 
 import matplotlib.path as mplPath 
 import matplotlib.pyplot as plt1  #plot map of points Limite Area 
 import matplotlib.pyplot as plt2  #plot the semivariogram 
-import matplotlib.pyplot as plt4  #plot Map Interpolated (OK / SVM)
+import matplotlib.pyplot as plt3  #plot Map Interpolated (OK / SVM)
+#import matplotlib.pyplot as plt4  #plot Map Interpolated (OK-SD)
 import matplotlib.pyplot as plt5  #plot Grafic of Cross Validation (OK / SVM)
 import matplotlib.pyplot as plt6  #plot Grafic of Number Ideal of Class - Performance Fuzzy Index (FPI), Normalised Classification Entropy (NCE)
 import matplotlib.pyplot as plt7  #plot Management Zones
@@ -833,6 +840,10 @@ class smart_map:
     
             self.Var_Selected = False           #Not selected Variable V_target  
                 
+            self.list_index_outlier = []        #List of index to Outliers 
+
+            self.list_index_out_polygon = []    #List of index to Point out polygon contourn
+
             self.Contorno_Definido = False      #Not selected Map Contourn 
     
             self.Variogram = False              #Not ajust variogram 
@@ -955,6 +966,27 @@ class smart_map:
     def resampling_of_points(self, df):
 
 
+        if 'fid' in df.columns:
+            df.drop('fid', axis=1, inplace=True)            
+
+        #if 'CoordX_SM' in df.columns:
+        #    df.drop('CoordX_SM', axis=1, inplace=True)            
+
+        #if 'CoordY_SM' in df.columns:
+        #    df.drop('CoordY_SM', axis=1, inplace=True)            
+
+
+        list_cols_NaN = df.columns[df.isnull().any()].tolist()       #encontra as colunas com NaN no dataframe 
+
+
+        #verificar por colunas que tem todos os valores nulos e apaga a coluna -> evitar de apgar todo o dataframe  
+        for i in range (len(list_cols_NaN)):                    
+            columnName = list_cols_NaN[i]
+            tot_NaN_in_col = df[columnName].isnull().sum()
+            if tot_NaN_in_col == len(df):
+               df.drop(columnName, axis=1, inplace=True)            
+
+        
         tot_nan = df.isnull().sum().sum()
         
         if tot_nan > 0: 
@@ -1180,6 +1212,11 @@ class smart_map:
                            valor = '%.3f' % valor                       
                         
                     valor = QTableWidgetItem(str(valor))                  
+
+                    if i in self.list_index_outlier: 
+                        valor.setForeground(QBrush(QColor(255, 0, 0)))
+
+                    
                     self.dlg.datatable_atributos.setItem(i,j, valor)                       
                     cont = cont + 1 
                     progress.setValue(cont)                        
@@ -1366,64 +1403,59 @@ class smart_map:
             selectedLayer = self.dlg.mMapLayerComboBox.currentLayer()
 
 
-            continue_prossessing = 'YES'
-
-            if len(selectedLayer) > self.maximum_points_plugin: 
-
-                message =  self.tr('A layer selecionada possui ') + str(len(selectedLayer)) + self.tr(' pontos amostrados.') + '\n' 
-                message = message + self.tr('O limite máximo suportado pelo plugin para a layer de entrada é: ') + str(self.maximum_points_plugin) + self.tr(' pontos.') + '\n'
-                message = message + self.tr('Deseja realizar uma reamostragem de pontos?') + '\n'
-
-                resample = QMessageBox.question(self.dlg, self.tr('Mensagem'), self.tr(message) , QMessageBox.Yes | QMessageBox.No)
-        
-                if resample == QMessageBox.No:
-
-                    continue_prossessing = 'NO'
-
-
-            if continue_prossessing == 'YES': 
-
-
-                # salvar a layer em um arquivo .csv
-
-
-                maximum = 10
-                progress = QProgressDialog(self.tr('Importando tabela de atributos...'), self.tr('Cancelar'),  1, maximum, self.dlg) 
-                progress.setWindowTitle('Smart-Map')
-                progress.show() 
-                progress.setCancelButton(None)                                     #remove button cancel 
-                #progress.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, False)    #disable button 'X' 
-                progress.setWindowModality(QtCore.Qt.WindowModal)                  #modal for parent form 
-                #progress.setWindowModality(QtCore.Qt.ApplicationModal)            #modal for application 
-                time.sleep(0.1)
+            '''
+            features = selectedLayer.getFeatures()
+            for feature in features:
+                geom= QgsGeometry.asPoint(feature.geometry())
                 
-                progress.setMinimumDuration(1000) #1000ms  ==  1s 
-                progress.forceShow()
+            pxy=QgsPointXY(geom)
+            long = pxy.x()
+            lat  = pxy.y()
+            
+            if (((abs(long) >= 0) and (abs(long) <= 180)) or ((abs(lat) >= 0) and (abs(lat) <= 90))): 
+            '''
 
-                progress.setValue(0)
-                progress.setValue(1)
-                progress.setValue(2)               
+            lyrCRS = selectedLayer.crs()
+            
+            if (lyrCRS.isGeographic() == True):  #layer é lat/long
 
-                lyrCRS = selectedLayer.crs() 
-                QgsVectorFileWriter.writeAsVectorFormat(selectedLayer, os.path.join(self.path_absolute , '0_Dados.csv'), "utf-8", lyrCRS, "CSV")  
+                message =  self.tr('O Sistema de Coordenadas Geográficas deve estar em UTM.') + '\n' 
+                message = message + self.tr('Realize a conversão da layer de entrada para a projeção UTM antes de importá-la no Smart-Map.') + '\n'
 
-                progress.setValue(9)               
-                progress.close() 
 
-                filename = os.path.join(self.path_absolute , '0_Dados.csv')  
+                msg_box = QMessageBox()
+                msg_box.setWindowIcon(QtGui.QIcon(self.icon_path))        
+                msg_box.setIcon(QMessageBox.Warning)
+                msg_box.setWindowTitle(self.tr('Mensagem'))
+                msg_box.setText(message)
+                msg_box.exec_()               
 
-                self.df  = pd.read_csv(filename, sep = ',')  
+            else:      
 
-                self.df  = self.df._get_numeric_data()  #filtrar as colunas só com números 
 
-                self.v_target =  self.dlg.comboBox_VTarget.currentText()   
-
-                cols_df = list(self.df.columns.values) 
-
-                if ((self.Cord_X not in cols_df) and (self.Cord_Y not in cols_df)):   
-
-                    maximum = len(self.df) 
-                    progress = QProgressDialog(self.tr('Calculando Coordenadas da Layer...'), self.tr('Cancelar'),  1, maximum, self.dlg)
+                continue_prossessing = 'YES'
+    
+                if len(selectedLayer) > self.maximum_points_plugin * 1.2: 
+    
+                    message =  self.tr('A layer selecionada possui ') + str(len(selectedLayer)) + self.tr(' pontos amostrados.') + '\n' 
+                    message = message + self.tr('O limite máximo suportado pelo plugin para a layer de entrada é: ') + str(self.maximum_points_plugin) + self.tr(' pontos.') + '\n'
+                    message = message + self.tr('Deseja realizar uma reamostragem de pontos?') + '\n'
+    
+                    resample = QMessageBox.question(self.dlg, self.tr('Mensagem'), self.tr(message) , QMessageBox.Yes | QMessageBox.No)
+            
+                    if resample == QMessageBox.No:
+    
+                        continue_prossessing = 'NO'
+    
+    
+                if continue_prossessing == 'YES': 
+    
+    
+                    # salvar a layer em um arquivo .csv
+    
+    
+                    maximum = 10
+                    progress = QProgressDialog(self.tr('Importando tabela de atributos...'), self.tr('Cancelar'),  1, maximum, self.dlg) 
                     progress.setWindowTitle('Smart-Map')
                     progress.show() 
                     progress.setCancelButton(None)                                     #remove button cancel 
@@ -1431,380 +1463,469 @@ class smart_map:
                     progress.setWindowModality(QtCore.Qt.WindowModal)                  #modal for parent form 
                     #progress.setWindowModality(QtCore.Qt.ApplicationModal)            #modal for application 
                     time.sleep(0.1)
-    
                     
-                    features = selectedLayer.getFeatures()                       
-                    
-                    features_Coordx = []
-                    features_Coordy = []
-                    cont = 1
-                    for feat in features:
-                        geom = QgsGeometry.asPoint(feat.geometry())
-                        pxy=QgsPointXY(geom)
-                        features_Coordx.append(pxy.x())                                #Valor da coordenada X calculada pelo Smart-Map     
-                        features_Coordy.append(pxy.y())                                #Valor da coordenada Y calculada pelo Smart-Map
+                    progress.setMinimumDuration(1000) #1000ms  ==  1s 
+                    progress.forceShow()
     
-                        cont = cont + 1 
-                        progress.setValue(cont)                        
-                        if progress.wasCanceled():                          
-                           progress.close() 
-                           return 
-                    
-                    progress.close()               
-        
-                    features_Coordx = np.array(features_Coordx)
-                    features_Coordy = np.array(features_Coordy)
+                    progress.setValue(0)
+                    progress.setValue(1)
+                    progress.setValue(2)               
     
-                    arr_xy = np.column_stack([features_Coordx, features_Coordy])      
-        
-                    arr_xy_df = pd.DataFrame(np.atleast_2d(arr_xy), columns=['CoordX', 'CoordY'])
-        
-                    df_xy_id = pd.DataFrame({'CoordX_SM':arr_xy_df.CoordX, 'CoordY_SM':arr_xy_df.CoordY, 'ID_SM':arr_xy_df.index})
-                    df_xy_id['ID_SM'] += 1 
-        
-                    self.df = pd.concat([self.df, df_xy_id], axis=1)  
-                    
-                    self.df.to_csv(os.path.join(self.path_absolute , '0_Dados.csv'), sep=',', index=False, encoding='utf-8')
+                    lyrCRS = selectedLayer.crs() 
+                    QgsVectorFileWriter.writeAsVectorFormat(selectedLayer, os.path.join(self.path_absolute , '0_Dados.csv'), "utf-8", lyrCRS, "CSV")  
     
-
-    			#######################################################################    
-                #eliminar valores NaN da coluna v_target  
-
-                self.VTarget_FileName  = self.v_target    
-                for ch in [' ', ')', '(', 'á', '?', '/', 'é', '.', 'í', 'ú', '-']:
-                    if ch in self.VTarget_FileName:
-                        self.VTarget_FileName = self.VTarget_FileName.replace(ch,"_")
-        
-        
-                is_NaN = self.df.isnull()
-                row_has_NaN = is_NaN.any(axis=1)
-               
-               
-                df_with_NaN = self.df[row_has_NaN]
-                
-                list_rows_NaN = list(df_with_NaN.index.values)
-        
-                list_cols_NaN = df_with_NaN.columns[df_with_NaN.isnull().any()].tolist()
-        
-        
-                if self.v_target in list_cols_NaN:                                 #o atributo v_target selecionado possui valores nulos  -> apagar as linhas  
-        
-                    
-                    df_with_NaN = self.df[self.df[self.v_target].isnull()]
-                    list_rows_NaN = list(df_with_NaN.index.values)
-        
-                    self.df.drop(index=list_rows_NaN, inplace = True)              #apaga linhas com valores nulos 
-                    self.df.reset_index(drop = True, inplace=True)                 #reset the index without new colum index    
+                    progress.setValue(9)               
+                    progress.close() 
     
-                    #mensagem de retorno ao usuário             
-                    msg_box = QMessageBox()
-                    msg_box.setWindowIcon(QtGui.QIcon(self.icon_path))        
-                    msg_box.setIcon(QMessageBox.Warning)
-                    msg_box.setWindowTitle(self.tr('Mensagem'))
-                    msg_box.setText(self.tr('Existem') + ' : ' + str(len(list_rows_NaN)) + ' ' + self.tr('valores nulos na tabela.') + '\n' + self.tr('Linha(s)') + ': ' + str(list_rows_NaN) + ' ' + self.tr('foram excluídas.'))
-                    msg_box.exec_()               
-
-
-          
-
-    			#######################################################################    
-                #resampling datatable da tabela de atributos 
-                if len(self.df) > self.maximum_points_plugin: 
-
-                    self.df = self.resampling_of_points(self.df)
-
-                    message = QMessageBox.question(self.dlg, self.tr('Mensagem'), self.tr('Deseja salvar os pontos reamostrados em uma nova layer Qgis?') , QMessageBox.Yes | QMessageBox.No)
+                    filename = os.path.join(self.path_absolute , '0_Dados.csv')  
+    
+                    self.df  = pd.read_csv(filename, sep = ',')  
+    
+                    self.df  = self.df._get_numeric_data()  #filtrar as colunas só com números 
+    
+                    self.v_target =  self.dlg.comboBox_VTarget.currentText()   
+    
+                    cols_df = list(self.df.columns.values) 
+    
+                    if ((self.Cord_X not in cols_df) and (self.Cord_Y not in cols_df)):   
+    
+                        maximum = len(self.df) 
+                        progress = QProgressDialog(self.tr('Calculando Coordenadas da Layer...'), self.tr('Cancelar'),  1, maximum, self.dlg)
+                        progress.setWindowTitle('Smart-Map')
+                        progress.show() 
+                        progress.setCancelButton(None)                                     #remove button cancel 
+                        #progress.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, False)    #disable button 'X' 
+                        progress.setWindowModality(QtCore.Qt.WindowModal)                  #modal for parent form 
+                        #progress.setWindowModality(QtCore.Qt.ApplicationModal)            #modal for application 
+                        time.sleep(0.1)
+        
+                        
+                        features = selectedLayer.getFeatures()                       
+                        
+                        features_Coordx = []
+                        features_Coordy = []
+                        cont = 1
+                        for feat in features:
+                            geom = QgsGeometry.asPoint(feat.geometry())
+                            pxy=QgsPointXY(geom)
+                            features_Coordx.append(pxy.x())                                #Valor da coordenada X calculada pelo Smart-Map     
+                            features_Coordy.append(pxy.y())                                #Valor da coordenada Y calculada pelo Smart-Map
+        
+                            cont = cont + 1 
+                            progress.setValue(cont)                        
+                            if progress.wasCanceled():                          
+                               progress.close() 
+                               return 
+                        
+                        progress.close()               
             
-                    if message == QMessageBox.Yes:
-
-
-                        self.df.to_csv(os.path.join(self.path_absolute , '0_Dados_Resample.csv'), sep=',', index=False, encoding='utf-8')
+                        features_Coordx = np.array(features_Coordx)
+                        features_Coordy = np.array(features_Coordy)
+        
+                        arr_xy = np.column_stack([features_Coordx, features_Coordy])      
+            
+                        arr_xy_df = pd.DataFrame(np.atleast_2d(arr_xy), columns=['CoordX', 'CoordY'])
+            
+                        df_xy_id = pd.DataFrame({'CoordX_SM':arr_xy_df.CoordX, 'CoordY_SM':arr_xy_df.CoordY, 'ID_SM':arr_xy_df.index})
+                        df_xy_id['ID_SM'] += 1 
+            
+                        self.df = pd.concat([self.df, df_xy_id], axis=1)  
                         
-                        self.dlg.mMapLayerComboBox.currentIndexChanged.disconnect()    #disconnecta evento do combobox select Layer Qgis na tabela de atributos 
-                        
-                        
-                        Input_Table            = os.path.join(self.path_absolute , '0_Dados_Resample.csv') #set the filepath for the input CSV
-                        Output_Layer_File_shp  = os.path.join(self.path_absolute , selectedLayer.name() + '_Resample.shp') #set the filepath for the output shapefile
-                        Output_Layer_Name      =                                   selectedLayer.name() + '_Resample'
-
-
-                        self.export_shapefile_to_qgis(Input_Table, Output_Layer_File_shp, Output_Layer_Name) 
-
-                        
-                        self.dlg.mMapLayerComboBox.currentIndexChanged.connect(self.mMapLayerComboBox_changed) #connecta evento do combobox select Layer Qgis na tabela de atributos 
-
-
-           
-    			###############################################################
-                #preencher datatable da tabela de atributos 
+                        self.df.to_csv(os.path.join(self.path_absolute , '0_Dados.csv'), sep=',', index=False, encoding='utf-8')
+        
     
-
-                self.load_datatable_atribute_table()
+        			#######################################################################    
+                    #eliminar valores NaN da coluna v_target  
+    
+                    self.VTarget_FileName  = self.v_target    
+                    for ch in [' ', ')', '(', 'á', '?', '/', 'é', '.', 'í', 'ú', '-']:
+                        if ch in self.VTarget_FileName:
+                            self.VTarget_FileName = self.VTarget_FileName.replace(ch,"_")
+            
+            
+                    is_NaN = self.df.isnull()
+                    row_has_NaN = is_NaN.any(axis=1)
+                   
+                   
+                    df_with_NaN = self.df[row_has_NaN]
+                    
+                    list_rows_NaN = list(df_with_NaN.index.values)
+            
+                    list_cols_NaN = df_with_NaN.columns[df_with_NaN.isnull().any()].tolist()
+            
+            
+                    if self.v_target in list_cols_NaN:                                 #o atributo v_target selecionado possui valores nulos  -> apagar as linhas  
+            
+                        
+                        df_with_NaN = self.df[self.df[self.v_target].isnull()]
+                        list_rows_NaN = list(df_with_NaN.index.values)
+            
+                        self.df.drop(index=list_rows_NaN, inplace = True)              #apaga linhas com valores nulos 
+                        self.df.reset_index(drop = True, inplace=True)                 #reset the index without new colum index    
+        
+                        #mensagem de retorno ao usuário             
+                        msg_box = QMessageBox()
+                        msg_box.setWindowIcon(QtGui.QIcon(self.icon_path))        
+                        msg_box.setIcon(QMessageBox.Warning)
+                        msg_box.setWindowTitle(self.tr('Mensagem'))
+                        msg_box.setText(self.tr('Existem') + ' : ' + str(len(list_rows_NaN)) + ' ' + self.tr('valores nulos na tabela.') + '\n' + self.tr('Linha(s)') + ': ' + str(list_rows_NaN) + ' ' + self.tr('foram excluídas.'))
+                        msg_box.exec_()               
+    
+    
+              
+    
+        			#######################################################################    
+                    #resampling datatable da tabela de atributos 
+                    if len(self.df) > self.maximum_points_plugin * 1.2: 
+    
+                        self.df = self.resampling_of_points(self.df)
+    
+                        message = QMessageBox.question(self.dlg, self.tr('Mensagem'), self.tr('Deseja salvar os pontos reamostrados em uma nova layer Qgis?') , QMessageBox.Yes | QMessageBox.No)
                 
+                        if message == QMessageBox.Yes:
     
-                
-    			#######################################################################    
-                #Calculando Max e Min para o mapa de contorno  
+                            
+                            self.df.to_csv(os.path.join(self.path_absolute , '0_Dados_Resample.csv'), sep=',', index=False, encoding='utf-8')
+                            
+                            self.dlg.mMapLayerComboBox.currentIndexChanged.disconnect()    #disconnecta evento do combobox select Layer Qgis na tabela de atributos 
+                            
+                            
+                            Input_Table            = os.path.join(self.path_absolute , '0_Dados_Resample.csv') #set the filepath for the input CSV
+                            Output_Layer_File_shp  = os.path.join(self.path_absolute , selectedLayer.name() + '_Resample.shp') #set the filepath for the output shapefile
+                            Output_Layer_Name      =                                   selectedLayer.name() + '_Resample'
     
-                self.data = self.df[[self.Cord_X, self.Cord_Y, self.v_target]] 
-                self.data = np.array( self.data, dtype=np.float )
     
-                self.Pixel_Size_X = self.dlg.SpinBox_Pixel_Size_X.value() 
+                            self.export_shapefile_of_points_to_qgis(Input_Table, Output_Layer_File_shp, Output_Layer_Name) 
+                            #self.export_shapefile_of_polygons_to_qgis(Input_Table, Output_Layer_File_shp, Output_Layer_Name) 
     
-                self.Pixel_Size_Y = self.dlg.SpinBox_Pixel_Size_Y.value() 
+                            
+                            self.dlg.mMapLayerComboBox.currentIndexChanged.connect(self.mMapLayerComboBox_changed) #connecta evento do combobox select Layer Qgis na tabela de atributos 
+    
+    
+               
+                   	###############################################################
+                    #localizar Outliers 
+                   
+                        
+                    if self.dlg.checkBox_Eliminate_Outilier.isChecked(): 
+                       #self.df = functions.eliminar_outlier(self.df, self.v_target)
+                       self.list_index_outlier = functions.localizar_outlier(self.df, self.v_target)
+    
+    
+    
+        			###############################################################
+                    #preencher datatable da tabela de atributos 
+        
+    
+                    self.load_datatable_atribute_table()
+                    
+        
+    
+        			###############################################################
+                    #excluir Outliers da tabela de atributos 
+    
+                    if len(self.list_index_outlier) > 0: 
+            
+                        df_outlier = self.df.loc[self.df.index[self.list_index_outlier]]
+    
+                        self.data_outlier = df_outlier[[self.Cord_X, self.Cord_Y, self.v_target]] 
+                        self.data_outlier = np.array( self.data_outlier, dtype=np.float )
+    
+                        self.df.drop(self.df.index[self.list_index_outlier], inplace=True)
+                        self.df.reset_index(drop = True, inplace=True)
+    
+    
+                        #print('list_index_outlier', self.list_index_outlier)
+    
     
                     
-                if self.Contorno_Definido ==  False:                           #contorno não foi definido -> utilizar dados da tabela de atributos 
-                    self.Cord_X_min = self.df[self.Cord_X].min() 
-                    self.Cord_Y_min = self.df[self.Cord_Y].min() 
-                    self.Cord_X_max = self.df[self.Cord_X].max() 
-                    self.Cord_Y_max = self.df[self.Cord_Y].max() 
+        			#######################################################################    
+                    #Calculando Max e Min para o mapa de contorno  
+        
+                    self.data = self.df[[self.Cord_X, self.Cord_Y, self.v_target]] 
+                    self.data = np.array( self.data, dtype=np.float )
+        
+                    self.Pixel_Size_X = self.dlg.SpinBox_Pixel_Size_X.value() 
+        
+                    self.Pixel_Size_Y = self.dlg.SpinBox_Pixel_Size_Y.value() 
+        
+                        
+                    if self.Contorno_Definido ==  False:                           #contorno não foi definido -> utilizar dados da tabela de atributos 
+                        self.Cord_X_min = self.df[self.Cord_X].min() 
+                        self.Cord_Y_min = self.df[self.Cord_Y].min() 
+                        self.Cord_X_max = self.df[self.Cord_X].max() 
+                        self.Cord_Y_max = self.df[self.Cord_Y].max() 
+        
+                    self.dlg.lineEdit_XMin.setText('%.3f' % self.Cord_X_min)                        
+                    self.dlg.lineEdit_XMax.setText('%.3f' % self.Cord_X_max)                            
+                    self.dlg.lineEdit_YMin.setText('%.3f' % self.Cord_Y_min)                            
+                    self.dlg.lineEdit_YMax.setText('%.3f' % self.Cord_Y_max)                        
+        
+        			   
+                    self.Num_Points_X = int((float(self.Cord_X_max) - float(self.Cord_X_min)) / int(self.Pixel_Size_X))         
+                    self.Num_Points_Y = int((float(self.Cord_Y_max) - float(self.Cord_Y_min)) / int(self.Pixel_Size_Y))         
+        
+        
+                    self.dlg.lineEdit_Num_Points_X.setText(str(self.Num_Points_X)) 
+                    self.dlg.lineEdit_Num_Points_Y.setText(str(self.Num_Points_Y)) 
+        
+                    self.dlg.label_VTargetOK.setText( self.tr('Z') + ': ' + self.v_target)
+                    self.dlg.label_VTargetSVM.setText(self.tr('Z') + ': ' + self.v_target)
+                    self.dlg.label_VTargetSVM.setEnabled(True)        
+        
+        
+        
+        			###############################################################
+        			#calculando o Indice de Moran para os pontos amostrados da tabela de atributos 
+        
+                    df_pontos_amostrados = pd.DataFrame(np.atleast_2d(self.data), columns=[self.Cord_X, self.Cord_Y, self.v_target])
+        
+                    Moran_Index, P_Value = functions.calculate_index_moran(df_pontos_amostrados, self.Cord_X, self.Cord_Y, self.v_target) 
+        
+                    self.moran_index = '%.3f' % Moran_Index                          
+                    self.p_value =  '%.3f' % P_Value                                     
+        
+        
+        			###############################################################
+        			#plotar mapa de pontos amostrados    
+        
+                    plt1.close()
+                    plt1.title('I.Moran: ' + str(self.moran_index) + ' P.Value: ' + str(self.p_value))
+                    plt1.xlabel('Longitude (X)')
+                    plt1.ylabel('Latitude  (Y)') 
+        
+                    plt1.xlim(float(self.Cord_X_min-100), float(self.Cord_X_max+100))
+                    plt1.ylim(float(self.Cord_Y_min-100), float(self.Cord_Y_max+100))        
+        
     
-                self.dlg.lineEdit_XMin.setText('%.3f' % self.Cord_X_min)                        
-                self.dlg.lineEdit_XMax.setText('%.3f' % self.Cord_X_max)                            
-                self.dlg.lineEdit_YMin.setText('%.3f' % self.Cord_Y_min)                            
-                self.dlg.lineEdit_YMax.setText('%.3f' % self.Cord_Y_max)                        
+                    interval_x = int((self.Cord_X_max-self.Cord_X_min)/5)
+                    
+                    if interval_x == 0:
+                        interval_x = 1   #int((self.Cord_X_max-self.Cord_X_min))
     
-    			   
-                self.Num_Points_X = int((float(self.Cord_X_max) - float(self.Cord_X_min)) / int(self.Pixel_Size_X))         
-                self.Num_Points_Y = int((float(self.Cord_Y_max) - float(self.Cord_Y_min)) / int(self.Pixel_Size_Y))         
+                    xmarks=[i for i in range(int(self.Cord_X_min),int(self.Cord_X_max) , interval_x)]          
+                    plt1.xticks(xmarks)
+        
     
-    
-                self.dlg.lineEdit_Num_Points_X.setText(str(self.Num_Points_X)) 
-                self.dlg.lineEdit_Num_Points_Y.setText(str(self.Num_Points_Y)) 
-    
-                self.dlg.label_VTargetOK.setText( self.tr('Z') + ': ' + self.v_target)
-                self.dlg.label_VTargetSVM.setText(self.tr('Z') + ': ' + self.v_target)
-                self.dlg.label_VTargetSVM.setEnabled(True)        
-    
-    
-    
-    			###############################################################
-    			#calculando o Indice de Moran para os pontos amostrados da tabela de atributos 
-    
-                df_pontos_amostrados = pd.DataFrame(np.atleast_2d(self.data), columns=[self.Cord_X, self.Cord_Y, self.v_target])
-    
-                Moran_Index, P_Value = functions.calculate_index_moran(df_pontos_amostrados, self.Cord_X, self.Cord_Y, self.v_target) 
-    
-                self.moran_index = '%.3f' % Moran_Index                          
-                self.p_value =  '%.3f' % P_Value                                     
-    
-    
-    			###############################################################
-    			#plotar mapa de pontos amostrados    
-    
-                plt1.close()
-                plt1.title('I.Moran: ' + str(self.moran_index) + ' P.Value: ' + str(self.p_value))
-                plt1.xlabel('Longitude (X)')
-                plt1.ylabel('Latitude  (Y)') 
-    
-                plt1.xlim(float(self.Cord_X_min-100), float(self.Cord_X_max+100))
-                plt1.ylim(float(self.Cord_Y_min-100), float(self.Cord_Y_max+100))        
-    
-                xmarks=[i for i in range(int(self.Cord_X_min),int(self.Cord_X_max) , int((self.Cord_X_max-self.Cord_X_min)/5))]          
-                plt1.xticks(xmarks)
-    
-                ymarks=[i for i in range(int(self.Cord_Y_min),int(self.Cord_Y_max) , int((self.Cord_Y_max-self.Cord_Y_min)/7))]          
-                plt1.yticks(ymarks)
-    
-                #plt1.scatter(self.data[:,0], self.data[:,1])
-                plt1.scatter(self.data[:,0], self.data[:,1], c=self.data[:,2], cmap='RdYlGn')
-    
-                clb = plt1.colorbar(aspect=20)                                     #expessura do colorbar 
-                clb.ax.set_title(self.v_target)
-    
-                plt1.subplots_adjust(wspace=0.6, hspace=0.6, left=0.15, right=0.95, bottom=0.1, top=0.95)
-    			  
-                plt1.savefig(     os.path.join(self.path_absolute , '0_Limite_Contorno.png'))
-                pixmap1 = QPixmap(os.path.join(self.path_absolute , '0_Limite_Contorno.png'))
-                self.dlg.label_pontos_limite.show()
-                self.dlg.label_pontos_limite.setPixmap(pixmap1)
-    
-    
-    
-                ####################################################################### 
-                #Calculando dados para gerar semivariograma 
-    
-                self.xy     = self.df[[self.Cord_X, self.Cord_Y]]  
-                self.z      = self.df[self.v_target]  
-    
-                #xyz    = self.df[[Cord_X, Cord_Y, v_target]] 
-    
-                ###Constrõe o objeto
-                #Entrada: xy e z
-                #Calcula distancias calculadas entre os pares de pontos x, y  #self.var['lag']
-                #Calcula a semivariância entre os pares de pontos x, y        #self.var['gamma']            
-                #Calcula a distância máxima entre os lags                     #self.max_dist=self.var['lag'].max()
-                #Calcula a distância mínima entre os lags                     #self.min_dist=self.var['lag'].min()
-                #Calcula a variância amostral                                 #self.sample_variance=z.var() 
-                Semiv = semivariogram.Semivariogram(self.xy, self.z)
+                    interval_y = int((self.Cord_Y_max-self.Cord_Y_min)/7)               
+                    ymarks=[i for i in range(int(self.Cord_Y_min),int(self.Cord_Y_max) , interval_y)]          
+                    plt1.yticks(ymarks)
+        
+                    #plt1.scatter(self.data[:,0], self.data[:,1])
+                    plt1.scatter(self.data[:,0], self.data[:,1], c=self.data[:,2], cmap='RdYlGn')
+        
+                    if len(self.list_index_outlier) > 0: 
+                       plt1.scatter(self.data_outlier[:,0], self.data_outlier[:,1], c=self.data_outlier[:,2], marker="x", cmap='RdYlGn')
     
     
-                #Obtem a máxima distância entre pontos
-                self.max_dist = Semiv.max_dist                                                  #distância máxima da matriz de distâncias
+                    clb = plt1.colorbar(aspect=20)                                     #expessura do colorbar 
+                    clb.ax.set_title(self.v_target)
+        
+                    plt1.subplots_adjust(wspace=0.6, hspace=0.6, left=0.15, right=0.95, bottom=0.1, top=0.95)
+        			  
+                    plt1.savefig(     os.path.join(self.path_absolute , '0_Limite_Contorno.png'))
+                    pixmap1 = QPixmap(os.path.join(self.path_absolute , '0_Limite_Contorno.png'))
+                    self.dlg.label_pontos_limite.show()
+                    self.dlg.label_pontos_limite.setPixmap(pixmap1)
+        
+        
+        
+                    ####################################################################### 
+                    #Calculando dados para gerar semivariograma 
+        
+                    self.xy     = self.df[[self.Cord_X, self.Cord_Y]]  
+                    self.z      = self.df[self.v_target]  
+        
+                    #xyz    = self.df[[Cord_X, Cord_Y, v_target]] 
+        
+                    ###Constrõe o objeto
+                    #Entrada: xy e z
+                    #Calcula distancias calculadas entre os pares de pontos x, y  #self.var['lag']
+                    #Calcula a semivariância entre os pares de pontos x, y        #self.var['gamma']            
+                    #Calcula a distância máxima entre os lags                     #self.max_dist=self.var['lag'].max()
+                    #Calcula a distância mínima entre os lags                     #self.min_dist=self.var['lag'].min()
+                    #Calcula a variância amostral                                 #self.sample_variance=z.var() 
+                    Semiv = semivariogram.Semivariogram(self.xy, self.z)
+        
+        
+                    #Obtem a máxima distância entre pontos
+                    self.max_dist = Semiv.max_dist                                                  #distância máxima da matriz de distâncias
+        
+                    #Obtem a mínima distância entre pontos
+                    self.min_dist = Semiv.min_dist                                                  #distância minima da matriz de distâncias
+        
+        
+                    max_dist_factor = 0.6                                                           #fator de maxima distancia entre os pontos para construir o lag (60%) 
+                    self.active_distance_ini = max_dist_factor * self.max_dist                      #60% da maior distancia entre dois pontos amostrais
+                    #self.lag_distance_ini = self.active_distance_ini / 15                           #ver como calcular isso automaticamente   -> ANDRE COELHO
+                    self.lag_distance_ini    = Semiv.var['lag'][len(self.z)]
+        
     
-                #Obtem a mínima distância entre pontos
-                self.min_dist = Semiv.min_dist                                                  #distância minima da matriz de distâncias
-    
-    
-                max_dist_factor = 0.6                                                           #fator de maxima distancia entre os pontos para construir o lag (60%) 
-                self.active_distance_ini = max_dist_factor * self.max_dist                      #60% da maior distancia entre dois pontos amostrais
-                self.lag_distance_ini = self.active_distance_ini / 15                           #ver como calcular isso automaticamente   -> ANDRE COELHO
-    
-    
-                #set Distância Máxima -> valor mínimo        
-                i = 5   
-                while (self.max_dist < self.min_dist*i): 
-                    i = i - 1 
-                
-                self.DMax_Minimum = self.min_dist*i                                             #distância minima*5 da matriz de distâncias
-                
-                self.dlg.lineEdit_OK_DMax.setText('%.3f'  % self.active_distance_ini)   
-    
-                #set Distância (h) - lag 
-                self.dlg.lineEdit_OK_lags_dist.setText('%.3f'  % self.lag_distance_ini)   
-    
-    
-                #set neighbors 
-                self.VB_OK_Minimum = 4                                                          #self.dlg.lineEdit_OK_VBNumMax.setMinimum(4)              #número mínimo de vizinhos
-                self.VB_OK_Maximum = len(self.data)                                             #self.dlg.lineEdit_OK_VBNumMax.setMaximum(len(self.data)) #número máximo de vizinhos
-    
-                if len(self.data) >= 16: 
-                    self.dlg.lineEdit_OK_VBNumMax.setText('16')                                 #vizinhança de 16 pontos  
-                else: 
-                    self.dlg.lineEdit_OK_VBNumMax.setText(str(round(len(self.data)/2)))         #vizinhança = nr. de amostras / 2
-    
-    
-                #set Raio de busca 
-                self.Raio_OK_Minimum = self.min_dist                                            #self.dlg.lineEdit_OK_VBRaio.setMinimum(self.min_dist)     #distância minima na matriz de distâncias 
-                self.Raio_OK_Maximum = self.max_dist                                            #self.dlg.lineEdit_OK_VBRaio.setMaximum(self.max_dist)     #distância máxima na matriz de distâncias 
-                self.dlg.lineEdit_OK_VBRaio.setText('%.3f'  % self.max_dist)                    #self.active_distance_ini #60% da maior distancia entre dois pontos amostrais
-    
-    
-                ###############################################################
-                #Support Vector Machine  
-    
-    
-                #set neighbors 
-                self.VB_SVM_Minimum = 1                                                         #self.dlg.lineEdit_SVM_VBNumMax.setMinimum(1)              #número mínimo de vizinhos
-                self.VB_SVM_Maximum = len(self.data)                                            #self.dlg.lineEdit_SVM_VBNumMax.setMaximum(len(self.data)) #número máximo de vizinhos
-    
-                #set the search radius 
-                if len(self.data) >= 16: 
-                    self.dlg.lineEdit_SVM_VBNumMax.setText('16')                                #vizinhança de 16 pontos  
-                else: 
-                    self.dlg.lineEdit_SVM_VBNumMax.setText(str(round(len(self.data)/2)))        #vizinhança = nr. de amostras / 2
-    
-                #set Raio de Busca
-                self.Raio_SVM_Minimum = self.min_dist                                           #self.dlg.lineEdit_SVM_VBRaio.setMinimum(self.min_dist)     #distância minima na matriz de distâncias 
-                self.Raio_SVM_Maximum = self.max_dist                                           #self.dlg.lineEdit_SVM_VBRaio.setMaximum(self.max_dist)     #distância máxima na matriz de distâncias 
-                self.dlg.lineEdit_SVM_VBRaio.setText('%.3f'  % self.max_dist)                   #maior distancia entre dois pontos amostrais 
-    
-    
-    
-                ###############################################################
-                #definido o dataframe df_SVM_Trainfeatures -> Colunas: (x, y)
-    									  
-                self.df_SVM_Trainfeatures = self.df[[self.Cord_X, self.Cord_Y]] 
-    
-                self.list_cov_SVM = [self.Cord_X, self.Cord_Y]   #lista de covariáveis possui X, Y
-    
-                self.dlg.comboBox_SVM_Features_Adds.clear()
-                self.dlg.comboBox_SVM_Features_Adds.addItems(self.list_cov_SVM)   
-    
-
-                #preenchendo o datatable Trainfeatures -> Colunas: (x, y)
-                self.load_datatable_SVM_Trainfeatures()    
-
-    
-                ###############################################################
-                #definido o dataframe df_SVM_Trainlabels -> Coluna: V_target
-    
-    						
-                self.df_SVM_Trainlabels    = self.df[[self.v_target]] 
-   
-                #preenchendo o datatable Trainlabels -> Coluna: V_target 
-                self.load_datatable_SVM_Trainlabels()     
-
-    
-                #self.dlg.checkBox_Moran.setChecked(False)
-                #self.checkBox_Moran_clicked()   #exibe correlação de Moran 
-    
-    
-                if self.dlg.checkBox_Area_Contorno.isChecked():        
-                    self.pushButton_Area_Contorno_clicked() 
-    
-    
-     			###############################################################  
-                #Aba Dados
-                self.dlg.label_CRS_Layer.show() 
-                self.dlg.label_CRS_Layer.setText('CRS Layer: ' + self.lyrCRS_table_atribute) 
-    
-    
-     			###############################################################
-                #Aba Parametros e Contorno  
-                self.dlg.groupBox_Area_Contorno.setEnabled(True)
-                self.dlg.datatable_limite.setEnabled(True)
-                self.dlg.groupBox_Interv_Interp.setEnabled(True)
-                self.dlg.SpinBox_Pixel_Size_X.setEnabled(True)
-                self.dlg.SpinBox_Pixel_Size_Y.setEnabled(True)     
-                self.dlg.lineEdit_XMin.setEnabled(True)     
-                self.dlg.lineEdit_XMax.setEnabled(True)     
-                self.dlg.lineEdit_YMin.setEnabled(True)     
-                self.dlg.lineEdit_YMax.setEnabled(True)     
-     
-               
-     			###############################################################
-                #Aba Interpolação -> Krigagem  
-                self.dlg.groupBox_Variograma.setEnabled(True)
-                self.dlg.pushButton_VariogramaReset.setEnabled(False)  
-                self.dlg.pushButton_VariogramaAjust.setEnabled(True)  
-                self.dlg.pushButton_VariogramaSave.setEnabled(False)          
-                self.dlg.lineEdit_OK_DMax.setEnabled(True)
-                self.dlg.lineEdit_OK_lags_dist.setEnabled(True)        
+                    if self.lag_distance_ini < self.min_dist:                                       #lag_distance_ini é menor que min_dist -> Ajustar para mim_dist. 
+                       self.lag_distance_ini = self.min_dist
     
         
-     			###############################################################
-                #Aba Interpolação -> SVM              
-                self.dlg.groupBox_SVM_Vars.setEnabled(True)
-                self.dlg.groupBox_SVM.setEnabled(True)
-                self.dlg.lineEdit_SVM_VBNumMax.setEnabled(True)
-                self.dlg.lineEdit_SVM_VBRaio.setEnabled(True)        
-                self.dlg.doubleSpinBox_Weight_IDW.setEnabled(True)
-                self.dlg.comboBox_SVM_Fonte.setEnabled(True)
-                
-                self.dlg.checkBox_Moran.setEnabled(True)
-                self.dlg.checkBox_RFE.setEnabled(True)
+                    #set Distância Máxima -> valor mínimo        
+                    i = 5   
+                    while (self.max_dist < self.min_dist*i): 
+                        i = i - 1 
+                    
+                    self.DMax_Minimum = self.min_dist*i                                             #distância minima*5 da matriz de distâncias
+                    
+                    self.dlg.lineEdit_OK_DMax.setText('%.3f'  % self.active_distance_ini)   
         
-                self.dlg.comboBox_SVM_Features.setEnabled(True)
-                self.dlg.comboBox_SVM_Features.addItems(self.cols_table_atribute)
-                self.dlg.comboBox_SVM_Features_Adds.setEnabled(True)
-                self.dlg.pushButton_Validacao_Cruzada_SVM.setEnabled(True)  
+                    #set Distância (h) - lag 
+                    self.dlg.lineEdit_OK_lags_dist.setText('%.3f'  % self.lag_distance_ini)   
+        
+        
+                    #set neighbors 
+                    self.VB_OK_Minimum = 4                                                          #self.dlg.lineEdit_OK_VBNumMax.setMinimum(4)              #número mínimo de vizinhos
+                    self.VB_OK_Maximum = len(self.data)                                             #self.dlg.lineEdit_OK_VBNumMax.setMaximum(len(self.data)) #número máximo de vizinhos
+        
+                    if len(self.data) >= 16: 
+                        self.dlg.lineEdit_OK_VBNumMax.setText('16')                                 #vizinhança de 16 pontos  
+                    else: 
+                        self.dlg.lineEdit_OK_VBNumMax.setText(str(round(len(self.data)/2)))         #vizinhança = nr. de amostras / 2
+        
+        
+                    #set Raio de busca 
+                    self.Raio_OK_Minimum = self.min_dist                                            #self.dlg.lineEdit_OK_VBRaio.setMinimum(self.min_dist)     #distância minima na matriz de distâncias 
+                    self.Raio_OK_Maximum = self.max_dist                                            #self.dlg.lineEdit_OK_VBRaio.setMaximum(self.max_dist)     #distância máxima na matriz de distâncias 
+                    self.dlg.lineEdit_OK_VBRaio.setText('%.3f'  % self.max_dist)                    #self.active_distance_ini #60% da maior distancia entre dois pontos amostrais
+        
+        
+                    ###############################################################
+                    #Support Vector Machine  
+        
+        
+                    #set neighbors 
+                    self.VB_SVM_Minimum = 1                                                         #self.dlg.lineEdit_SVM_VBNumMax.setMinimum(1)              #número mínimo de vizinhos
+                    self.VB_SVM_Maximum = len(self.data)                                            #self.dlg.lineEdit_SVM_VBNumMax.setMaximum(len(self.data)) #número máximo de vizinhos
+        
+                    #set the search radius 
+                    if len(self.data) >= 16: 
+                        self.dlg.lineEdit_SVM_VBNumMax.setText('16')                                #vizinhança de 16 pontos  
+                    else: 
+                        self.dlg.lineEdit_SVM_VBNumMax.setText(str(round(len(self.data)/2)))        #vizinhança = nr. de amostras / 2
+        
+                    #set Raio de Busca
+                    self.Raio_SVM_Minimum = self.min_dist                                           #self.dlg.lineEdit_SVM_VBRaio.setMinimum(self.min_dist)     #distância minima na matriz de distâncias 
+                    self.Raio_SVM_Maximum = self.max_dist                                           #self.dlg.lineEdit_SVM_VBRaio.setMaximum(self.max_dist)     #distância máxima na matriz de distâncias 
+                    self.dlg.lineEdit_SVM_VBRaio.setText('%.3f'  % self.max_dist)                   #maior distancia entre dois pontos amostrais 
+        
+        
+        
+                    ###############################################################
+                    #definido o dataframe df_SVM_Trainfeatures -> Colunas: (x, y)
+        									  
+                    self.df_SVM_Trainfeatures = self.df[[self.Cord_X, self.Cord_Y]] 
+        
+                    self.list_cov_SVM = [self.Cord_X, self.Cord_Y]   #lista de covariáveis possui X, Y
+        
+                    self.dlg.comboBox_SVM_Features_Adds.clear()
+                    self.dlg.comboBox_SVM_Features_Adds.addItems(self.list_cov_SVM)   
+        
     
+                    #preenchendo o datatable Trainfeatures -> Colunas: (x, y)
+                    self.load_datatable_SVM_Trainfeatures()    
     
-     			###############################################################
-                #Aba Zona de Manejo       
-                self.dlg.pushButton_ZM_Add_Var.setEnabled(True)
+        
+                    ###############################################################
+                    #definido o dataframe df_SVM_Trainlabels -> Coluna: V_target
+        
+        						
+                    self.df_SVM_Trainlabels    = self.df[[self.v_target]] 
+       
+                    #preenchendo o datatable Trainlabels -> Coluna: V_target 
+                    self.load_datatable_SVM_Trainlabels()     
     
-    			
-                self.ImportQGIS = True          #Tabela de Atributos com dados da Layer do QGIS foi carregada  
+        
+                    #self.dlg.checkBox_Moran.setChecked(False)
+                    #self.checkBox_Moran_clicked()   #exibe correlação de Moran 
+        
+        
+                    if self.dlg.checkBox_Area_Contorno.isChecked():        
+                        self.pushButton_Area_Contorno_clicked() 
+        
     
-                self.Var_Selected = True        #Definiu a variavel para interpolação 
+                    ###############################################################
+                    #definido o dataframe df_SVM_Testfeatures -> Colunas : Colunas: (x, y)
     
-                self.Variogram = False          #Carregou Tabela de Atributos, mas ainda não gerou semivariograma 
+                    self.df_SVM_Testfeatures = pd.DataFrame(columns=[self.Cord_X, self.Cord_Y])      #dataframe vazio só com o nome das colunas 
     
+        
+         			###############################################################  
+                    #Aba Dados
+                    self.dlg.label_CRS_Layer.show() 
+                    self.dlg.label_CRS_Layer.setText('CRS Layer: ' + self.lyrCRS_table_atribute) 
+        
+        
+         			###############################################################
+                    #Aba Parametros e Contorno  
+                    self.dlg.groupBox_Area_Contorno.setEnabled(True)
+                    self.dlg.datatable_limite.setEnabled(True)
+                    self.dlg.groupBox_Interv_Interp.setEnabled(True)
+                    self.dlg.SpinBox_Pixel_Size_X.setEnabled(True)
+                    self.dlg.SpinBox_Pixel_Size_Y.setEnabled(True)     
+                    self.dlg.lineEdit_XMin.setEnabled(True)     
+                    self.dlg.lineEdit_XMax.setEnabled(True)     
+                    self.dlg.lineEdit_YMin.setEnabled(True)     
+                    self.dlg.lineEdit_YMax.setEnabled(True)     
+         
+                   
+         			###############################################################
+                    #Aba Interpolação -> Krigagem  
+                    self.dlg.groupBox_Variograma.setEnabled(True)
+                    self.dlg.pushButton_VariogramaReset.setEnabled(False)  
+                    self.dlg.pushButton_VariogramaAjust.setEnabled(True)  
+                    self.dlg.pushButton_VariogramaSave.setEnabled(False)          
+                    self.dlg.lineEdit_OK_DMax.setEnabled(True)
+                    self.dlg.lineEdit_OK_lags_dist.setEnabled(True)        
+        
+            
+         			###############################################################
+                    #Aba Interpolação -> SVM              
+                    self.dlg.groupBox_SVM_Vars.setEnabled(True)
+                    self.dlg.groupBox_SVM.setEnabled(True)
+                    self.dlg.lineEdit_SVM_VBNumMax.setEnabled(True)
+                    self.dlg.lineEdit_SVM_VBRaio.setEnabled(True)        
+                    self.dlg.doubleSpinBox_Weight_IDW.setEnabled(True)
+                    self.dlg.comboBox_SVM_Fonte.setEnabled(True)
+                    
+                    self.dlg.checkBox_Moran.setEnabled(True)
+                    self.dlg.checkBox_RFE.setEnabled(True)
+            
+                    self.dlg.comboBox_SVM_Features.setEnabled(True)
+                    self.dlg.comboBox_SVM_Features.addItems(self.cols_table_atribute)
+                    self.dlg.comboBox_SVM_Features_Adds.setEnabled(True)
+                    self.dlg.pushButton_SVM.setEnabled(True)
+                    self.dlg.pushButton_Validacao_Cruzada_SVM.setEnabled(True)  
+        
+        
+         			###############################################################
+                    #Aba Zona de Manejo       
+                    self.dlg.pushButton_ZM_Add_Var.setEnabled(True)
+        
+        			
+                    self.ImportQGIS = True          #Tabela de Atributos com dados da Layer do QGIS foi carregada  
+        
+                    self.Var_Selected = True        #Definiu a variavel para interpolação 
+        
+                    self.Variogram = False          #Carregou Tabela de Atributos, mas ainda não gerou semivariograma 
     
-                self.load_semivariograms()                              
-    
-                self.load_maps_to_generate_ZM()                              
-    
-                
-                if self.dlg.checkBox_Area_Contorno.isChecked(): 
-                
-                    self.pushButton_Area_Contorno_clicked() 
-    
-                #self.dlg.pushButton_ImportQGIS.setEnabled(True)
-                #progress.close() 
+                    self.SVM_Add_Coord = False 
+       
+                    self.load_semivariograms()                              
+        
+                    self.load_maps_to_generate_ZM()                              
+        
+                    
+                    if self.dlg.checkBox_Area_Contorno.isChecked(): 
+                    
+                        self.pushButton_Area_Contorno_clicked() 
+        
+                    #self.dlg.pushButton_ImportQGIS.setEnabled(True)
+                    #progress.close() 
                 
         else: 
             
@@ -1837,6 +1958,17 @@ class smart_map:
 
             self.SVM_Add_Coord = False                                         #set False to recalculate Test_Features in SVM 
 
+            self.df_SVM_Testfeatures = pd.DataFrame(columns=[self.Cord_X, self.Cord_Y])      #dataframe vazio só com o nome das colunas 
+
+            self.dlg.label_SVM.hide()           
+            self.dlg.datatable_pontos_interpolados_SVM.setColumnCount(0)
+            self.dlg.datatable_pontos_interpolados_SVM.setRowCount(0)
+    
+            self.dlg.label_validacao_cruzada_SVM.hide()
+            self.dlg.datatable_validacao_cruzada_SVM.setColumnCount(0)
+            self.dlg.datatable_validacao_cruzada_SVM.setRowCount(0)
+
+
 
     def SpinBox_Pixel_Size_Y_changed(self):    
         
@@ -1853,6 +1985,16 @@ class smart_map:
 
             self.SVM_Add_Coord = False                                         #set False to recalculate Test_Features in SVM 
         
+            self.df_SVM_Testfeatures = pd.DataFrame(columns=[self.Cord_X, self.Cord_Y])      #dataframe vazio só com o nome das colunas 
+
+            self.dlg.label_SVM.hide()           
+            self.dlg.datatable_pontos_interpolados_SVM.setColumnCount(0)
+            self.dlg.datatable_pontos_interpolados_SVM.setRowCount(0)
+    
+            self.dlg.label_validacao_cruzada_SVM.hide()
+            self.dlg.datatable_validacao_cruzada_SVM.setColumnCount(0)
+            self.dlg.datatable_validacao_cruzada_SVM.setRowCount(0)
+
 
 
     def lineEdit_XMin_editingFinished(self):    
@@ -1905,6 +2047,7 @@ class smart_map:
         
         self.SVM_Add_Coord = False                                             #set False to recalculate Test_Features in SVM   
 
+        self.df_SVM_Testfeatures = pd.DataFrame(columns=[self.Cord_X, self.Cord_Y])      #dataframe vazio só com o nome das colunas 
         
         if self.dlg.checkBox_Area_Contorno.isChecked(): 
 
@@ -1954,15 +2097,32 @@ class smart_map:
                 plt1.xlim(float(self.Cord_X_min-100), float(self.Cord_X_max+100))
                 plt1.ylim(float(self.Cord_Y_min-100), float(self.Cord_Y_max+100))        
     
-                xmarks=[i for i in range(int(self.Cord_X_min),int(self.Cord_X_max) , int((self.Cord_X_max-self.Cord_X_min)/5))]          
+
+                interval_x = int((self.Cord_X_max-self.Cord_X_min)/5)
+                
+                if interval_x == 0:
+                    interval_x = 1 #int((self.Cord_X_max-self.Cord_X_min))
+
+                xmarks=[i for i in range(int(self.Cord_X_min),int(self.Cord_X_max) , interval_x)]          
                 plt1.xticks(xmarks)
     
-                ymarks=[i for i in range(int(self.Cord_Y_min),int(self.Cord_Y_max) , int((self.Cord_Y_max-self.Cord_Y_min)/7))]          
+
+                interval_y = int((self.Cord_Y_max-self.Cord_Y_min)/7)
+
+                if interval_y == 0:
+                    interval_y = 1 #int((self.Cord_X_max-self.Cord_X_min))
+
+                ymarks=[i for i in range(int(self.Cord_Y_min),int(self.Cord_Y_max) , interval_y)]          
                 plt1.yticks(ymarks)
+
     
                 #plt1.scatter(self.data[:,0], self.data[:,1])
                 plt1.scatter(self.data[:,0], self.data[:,1], c=self.data[:,2], cmap='RdYlGn')
     
+                if len(self.list_index_outlier) > 0: 
+                   plt1.scatter(self.data_outlier[:,0], self.data_outlier[:,1], c=self.data_outlier[:,2], marker="x", cmap='RdYlGn')
+
+
                 clb = plt1.colorbar(aspect=20)                                 #expessura do colorbar 
                 clb.ax.set_title(self.v_target)
     
@@ -2038,229 +2198,293 @@ class smart_map:
         else: 
 
             lyrCRS = selectedLayer.crs()
+
+            if (lyrCRS.isGeographic() == True):  #layer é lat/long
+
+                message =  self.tr('O Sistema de Coordenadas Geográficas deve estar em UTM.') + '\n' 
+                message = message + self.tr('Realize a conversão da layer de entrada para a projeção UTM antes de importá-la no Smart-Map.') + '\n'
+
+
+                msg_box = QMessageBox()
+                msg_box.setWindowIcon(QtGui.QIcon(self.icon_path))        
+                msg_box.setIcon(QMessageBox.Warning)
+                msg_box.setWindowTitle(self.tr('Mensagem'))
+                msg_box.setText(message)
+                msg_box.exec_()               
+
+            else:      
+
                           
-            if selectedLayer.geometryType() == 2:                              #PoligonLayer 
-                                  
-                
-                features = selectedLayer.getFeatures()   
-                for feature in features:
-                    geom = feature.geometry()
+                if selectedLayer.geometryType() == 2:                              #PoligonLayer 
+                                      
                     
-                    points = geom.asMultiPolygon()
-
-                list_points = points[0][0]                
-                list_x = []
-                list_y = []
-                for i in range(len(list_points)): 
-                    list_x.append(list_points[i].x())
-                    list_y.append(list_points[i].y())
-
-                zippedList =  list(zip(list_x, list_y))                    
-                                     
-                self.df_limite = pd.DataFrame(zippedList, columns = ['Coord_X' , 'Coord_Y'])                    
-
-                self.df_limite.to_csv(os.path.join(self.path_absolute , '0_Limite_Contorno.csv'), sep=',', index=False, encoding='utf-8')
-                
-
-            if selectedLayer.geometryType() == 0:                              #PointLayer 
-            
-            
-                QgsVectorFileWriter.writeAsVectorFormat(selectedLayer, os.path.join(self.path_absolute , '0_Limite_Contorno.csv'), "utf-8", lyrCRS, "CSV")  
-        
-                filename = os.path.join(self.path_absolute , '0_Limite_Contorno.csv')  
-           
-    
-                self.df_limite = pd.read_csv(filename, sep = ',')  
-        
-                Cord_X_cont =   self.dlg.comboBox_CordX_AreaCont.currentText()    
-                Cord_Y_cont =   self.dlg.comboBox_CordY_AreaCont.currentText()     
-    
-                self.df_limite = self.df_limite[[Cord_X_cont, Cord_Y_cont]] 
-            
-                tot_nan = self.df_limite.isnull().sum().sum()
-    
-                if tot_nan > 0: 
-                    
-                    self.df_limite.dropna(inplace=True)                        #apaga linhas com valores nulos 
-                    self.df_limite.reset_index(drop = True, inplace=True)      #reset the index without new colum index    
-        
-            
-            #monta o datatable dflimite         
-            cols = [] 
-            cols = list(self.df_limite.columns.values)  
-            
-            self.df_limite.rename({cols[0]: 'Coord_X', cols[1]: 'Coord_Y'}, axis=1, inplace=True)                #renomeia as colunas do df_limite
-                            
-            self.df_limite = pd.concat([self.df_limite, self.df_limite.iloc[[0]]], ignore_index=True, axis = 0)  #concantena depois da ultima linha a primeira linha para fechar a area de contorno
-            
-            
-            self.data_limite = np.array( self.df_limite, dtype=np.float )       
-            
-            self.dlg.datatable_limite.setColumnCount(len(self.df_limite.columns))
-            self.dlg.datatable_limite.setRowCount(len(self.df_limite.index))
-            
-            #preencher o cabeçalho
-            try:                       
-                           
-                cols = [] 
-                cols = list(self.df_limite.columns.values)                        
-                self.dlg.datatable_limite.setHorizontalHeaderLabels(cols)
-
-            except AttributeError: 
-
-                #mensagem de retorno ao usuário 
-                msg_box = QMessageBox()
-                msg_box.setWindowIcon(QtGui.QIcon(self.icon_path))        
-                msg_box.setIcon(QMessageBox.Warning)
-                msg_box.setWindowTitle(self.tr('Mensagem'))
-                msg_box.setText(self.tr('Erro ao carregar tabela. Valor Inválido!'))
-                msg_box.exec_()
-                
-            
-            #preencher as linhas da planilha 
-            try:                       
-                for i in range(len(self.df_limite.index)):          #linhas 
-                    for j in range(len(self.df_limite.columns)):    #colunas 
-
-                        valor = self.df_limite.iloc[i,j]
-
-                        if valor.dtype == "float64": 
-                            valor = '%.3f' % valor                       
+                    features = selectedLayer.getFeatures()   
+                    for feature in features:
+                        geom = feature.geometry()
                         
-                        valor = QTableWidgetItem(str(valor))                  
-                        self.dlg.datatable_limite.setItem(i,j, valor)
-
-            except AttributeError: 
-
-                #mensagem de retorno ao usuário 
-                msg_box = QMessageBox()
-                msg_box.setWindowIcon(QtGui.QIcon(self.icon_path))        
-                msg_box.setIcon(QMessageBox.Warning)
-                msg_box.setWindowTitle(self.tr('Mensagem'))
-                msg_box.setText(self.tr('Erro ao carregar tabela. Valor Inválido!'))
-                msg_box.exec_()
+                        points = geom.asMultiPolygon()
     
-
-            self.dlg.datatable_limite.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers) #read-only para as celulas do datatable
-            
-                         
-
-            #lê as coordenadas X e Y da área de contorno 
-            
-            self.Cord_X_min = self.df_limite['Coord_X'].min() 
-            self.Cord_X_max = self.df_limite['Coord_X'].max() 
-            self.Cord_Y_min = self.df_limite['Coord_Y'].min() 
-            self.Cord_Y_max = self.df_limite['Coord_Y'].max() 
-
-
-            self.dlg.lineEdit_XMin.setText(str('%.3f' % self.Cord_X_min))
-            self.dlg.lineEdit_YMin.setText(str('%.3f' % self.Cord_Y_min))
-            self.dlg.lineEdit_XMax.setText(str('%.3f' % self.Cord_X_max))
-            self.dlg.lineEdit_YMax.setText(str('%.3f' % self.Cord_Y_max))
-
-           
-            #lê o tamanho dos pixels para gerar o grid     
-            self.Pixel_Size_X = self.dlg.SpinBox_Pixel_Size_X.value() 
-            self.Pixel_Size_Y = self.dlg.SpinBox_Pixel_Size_Y.value() 
-            
-            #calcula o número de pontos em x e y 
-            self.Num_Points_X = int((float(self.Cord_X_max) - float(self.Cord_X_min)) / float(self.Pixel_Size_X))         
-            self.Num_Points_Y = int((float(self.Cord_Y_max) - float(self.Cord_Y_min)) / float(self.Pixel_Size_Y))         
-        
-         
-            self.dlg.lineEdit_Num_Points_X.setText(str(self.Num_Points_X)) 
-            self.dlg.lineEdit_Num_Points_Y.setText(str(self.Num_Points_Y)) 
-        
-
-
-            polygono = np.array(self.df_limite, dtype=np.float)                #define o polygono = area de contorno 
-            bbPath = mplPath.Path(polygono)
-
-            #drop points out of polygon 
-            lista_index = [] 
-            for i in range(len(self.df)):
-                ponto = (self.df.iloc[i][self.Cord_X], self.df.iloc[i][self.Cord_Y])
-                if not bbPath.contains_point(ponto): 
-                    lista_index.append(i)
+    
+                    list_points = points[0][0]
+                    #print('list_points00:', points[0][0])    
                     
+                    #points[0][0]
+                    list_x = []
+                    list_y = []
+                    for i in range(len(list_points)): 
+                        list_x.append(list_points[i].x())
+                        list_y.append(list_points[i].y())
+    
+    
+                    if len(points) > 1: 
+    
+                        list_points = points[1][0]
+                        #print('list_points10:', points[1][0])    
+     
+                        for i in range(len(list_points)): 
+                            list_x.append(list_points[i].x())
+                            list_y.append(list_points[i].y())
+                        
+    
+    
+                    zippedList =  list(zip(list_x, list_y))                    
+                                         
+                    self.df_limite = pd.DataFrame(zippedList, columns = ['Coord_X' , 'Coord_Y'])                    
+    
+                    self.df_limite.to_csv(os.path.join(self.path_absolute , '0_Limite_Contorno.csv'), sep=',', index=False, encoding='utf-8')
                     
-            if len(lista_index) > 0: 
-
-                self.df.drop(self.df.index[lista_index], inplace=True)
-                self.df.reset_index(drop = True, inplace=True)
-                self.load_datatable_atribute_table()
-
-                self.xy.drop(self.xy.index[lista_index], inplace=True)
-                self.xy.reset_index(drop = True, inplace=True)
-
-                self.z.drop(self.z.index[lista_index], inplace=True)
-                self.z.reset_index(drop = True, inplace=True)
-
-                self.df_SVM_Trainfeatures.drop(self.df_SVM_Trainfeatures.index[lista_index], inplace=True)
-                self.df_SVM_Trainfeatures.reset_index(drop = True, inplace=True)
-                self.load_datatable_SVM_Trainfeatures()
+    
+                if selectedLayer.geometryType() == 0:                              #PointLayer 
                 
-                self.df_SVM_Trainlabels.drop(self.df_SVM_Trainlabels.index[lista_index], inplace=True)
-                self.df_SVM_Trainlabels.reset_index(drop = True, inplace=True)
-                self.load_datatable_SVM_Trainlabels()
+                
+                    QgsVectorFileWriter.writeAsVectorFormat(selectedLayer, os.path.join(self.path_absolute , '0_Limite_Contorno.csv'), "utf-8", lyrCRS, "CSV")  
+            
+                    filename = os.path.join(self.path_absolute , '0_Limite_Contorno.csv')  
+               
         
-            #plotar mapa de pontos e Area Limite     
-            self.data = self.df[[self.Cord_X, self.Cord_Y, self.v_target]] 
-            self.data = np.array( self.data, dtype=np.float )
-
-
+                    self.df_limite = pd.read_csv(filename, sep = ',')  
+            
+                    Cord_X_cont =   self.dlg.comboBox_CordX_AreaCont.currentText()    
+                    Cord_Y_cont =   self.dlg.comboBox_CordY_AreaCont.currentText()     
+        
+                    self.df_limite = self.df_limite[[Cord_X_cont, Cord_Y_cont]] 
+                
+                    tot_nan = self.df_limite.isnull().sum().sum()
+        
+                    if tot_nan > 0: 
+                        
+                        self.df_limite.dropna(inplace=True)                        #apaga linhas com valores nulos 
+                        self.df_limite.reset_index(drop = True, inplace=True)      #reset the index without new colum index    
+            
+                
+                #monta o datatable dflimite         
+                cols = [] 
+                cols = list(self.df_limite.columns.values)  
+                
+                self.df_limite.rename({cols[0]: 'Coord_X', cols[1]: 'Coord_Y'}, axis=1, inplace=True)                #renomeia as colunas do df_limite
+                                
+                self.df_limite = pd.concat([self.df_limite, self.df_limite.iloc[[0]]], ignore_index=True, axis = 0)  #concantena depois da ultima linha a primeira linha para fechar a area de contorno
+                
+                
+                self.data_limite = np.array( self.df_limite, dtype=np.float )       
+                
+                self.dlg.datatable_limite.setColumnCount(len(self.df_limite.columns))
+                self.dlg.datatable_limite.setRowCount(len(self.df_limite.index))
+                
+                #preencher o cabeçalho
+                try:                       
+                               
+                    cols = [] 
+                    cols = list(self.df_limite.columns.values)                        
+                    self.dlg.datatable_limite.setHorizontalHeaderLabels(cols)
     
-            plt1.close()
-            plt1.title('I.Moran: ' + str(self.moran_index) + ' P.Value: ' + str(self.p_value))
-            plt1.xlabel('Longitude (X)')
-            plt1.ylabel('Latitude  (Y)') 
-
-            plt1.xlim(float(self.Cord_X_min-100), float(self.Cord_X_max+100))
-            plt1.ylim(float(self.Cord_Y_min-100), float(self.Cord_Y_max+100))        
-
+                except AttributeError: 
     
-            xmarks=[i for i in range(int(self.Cord_X_min),int(self.Cord_X_max) , int((self.Cord_X_max-self.Cord_X_min)/5))]          
-            plt1.xticks(xmarks)
+                    #mensagem de retorno ao usuário 
+                    msg_box = QMessageBox()
+                    msg_box.setWindowIcon(QtGui.QIcon(self.icon_path))        
+                    msg_box.setIcon(QMessageBox.Warning)
+                    msg_box.setWindowTitle(self.tr('Mensagem'))
+                    msg_box.setText(self.tr('Erro ao carregar tabela. Valor Inválido!'))
+                    msg_box.exec_()
+                    
+                
+                #preencher as linhas da planilha 
+                try:                       
+                    for i in range(len(self.df_limite.index)):          #linhas 
+                        for j in range(len(self.df_limite.columns)):    #colunas 
     
-            ymarks=[i for i in range(int(self.Cord_Y_min),int(self.Cord_Y_max) , int((self.Cord_Y_max-self.Cord_Y_min)/7))]          
-            plt1.yticks(ymarks)
+                            valor = self.df_limite.iloc[i,j]
+    
+                            if valor.dtype == "float64": 
+                                valor = '%.3f' % valor                       
+                            
+                            valor = QTableWidgetItem(str(valor))                  
+                            self.dlg.datatable_limite.setItem(i,j, valor)
+    
+                except AttributeError: 
+    
+                    #mensagem de retorno ao usuário 
+                    msg_box = QMessageBox()
+                    msg_box.setWindowIcon(QtGui.QIcon(self.icon_path))        
+                    msg_box.setIcon(QMessageBox.Warning)
+                    msg_box.setWindowTitle(self.tr('Mensagem'))
+                    msg_box.setText(self.tr('Erro ao carregar tabela. Valor Inválido!'))
+                    msg_box.exec_()
+        
+    
+                self.dlg.datatable_limite.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers) #read-only para as celulas do datatable
+                
+                             
+    
+                #lê as coordenadas X e Y da área de contorno 
+                
+                self.Cord_X_min = self.df_limite['Coord_X'].min() 
+                self.Cord_X_max = self.df_limite['Coord_X'].max() 
+                self.Cord_Y_min = self.df_limite['Coord_Y'].min() 
+                self.Cord_Y_max = self.df_limite['Coord_Y'].max() 
     
     
-            plt1.plot(self.data_limite[:,0], self.data_limite[:,1])
-            #plt1.scatter(self.data[:,0], self.data[:,1])
-            plt1.scatter(self.data[:,0], self.data[:,1], c=self.data[:,2], cmap='RdYlGn')
-
-            clb = plt1.colorbar(aspect=20)                                     #expessura do colorbar 
-            clb.ax.set_title(self.v_target)
-
-            plt1.subplots_adjust(wspace=0.6, hspace=0.6, left=0.15, right=0.95, bottom=0.1, top=0.95)
-              
-            plt1.savefig(os.path.join(     self.path_absolute , '0_Limite_Contorno.png'))
-            pixmap1 = QPixmap(os.path.join(self.path_absolute , '0_Limite_Contorno.png'))
-            self.dlg.label_pontos_limite.show()
-            self.dlg.label_pontos_limite.setPixmap(pixmap1)
-
-
-            self.SVM_Add_Coord = False                                         #set False to recalculate Test_Features in SVM   
-
-            if self.SVM_Add_Feature == True:                                   #Adicionou features ao modelo SVM  -> serão retiradas pois alterou os parâmetros do SVM 
+                self.dlg.lineEdit_XMin.setText(str('%.3f' % self.Cord_X_min))
+                self.dlg.lineEdit_YMin.setText(str('%.3f' % self.Cord_Y_min))
+                self.dlg.lineEdit_XMax.setText(str('%.3f' % self.Cord_X_max))
+                self.dlg.lineEdit_YMax.setText(str('%.3f' % self.Cord_Y_max))
     
-                for i in range(2,len(self.list_cov_SVM)): 
-                    self.dlg.comboBox_SVM_Features_Adds.setCurrentIndex(i)
-                    self.pushButton_SVM_Remove_Feature_clicked()
-
-
-
-            self.Contorno_Definido = True   #Definiu o contorno do mapa 
+               
+                #lê o tamanho dos pixels para gerar o grid     
+                self.Pixel_Size_X = self.dlg.SpinBox_Pixel_Size_X.value() 
+                self.Pixel_Size_Y = self.dlg.SpinBox_Pixel_Size_Y.value() 
+                
+                #calcula o número de pontos em x e y 
+                self.Num_Points_X = int((float(self.Cord_X_max) - float(self.Cord_X_min)) / float(self.Pixel_Size_X))         
+                self.Num_Points_Y = int((float(self.Cord_Y_max) - float(self.Cord_Y_min)) / float(self.Pixel_Size_Y))         
+            
+             
+                self.dlg.lineEdit_Num_Points_X.setText(str(self.Num_Points_X)) 
+                self.dlg.lineEdit_Num_Points_Y.setText(str(self.Num_Points_Y)) 
+            
     
-            #self.Variogram = False         #Não ajustou o Variograma 
+    
+                polygono = np.array(self.df_limite, dtype=np.float)                #define o polygono = area de contorno 
+                bbPath = mplPath.Path(polygono)
+    
+                #drop points out of polygon 
+                self.list_index_out_polygon = [] 
+                for i in range(len(self.df)):
+                    ponto = (self.df.iloc[i][self.Cord_X], self.df.iloc[i][self.Cord_Y])
+                    if not bbPath.contains_point(ponto): 
+                        self.list_index_out_polygon.append(i)
+    
+                #print('list_index_out_polygon',  self.list_index_out_polygon)        
+                        
+                        
+                if len(self.list_index_out_polygon) > 0: 
+    
+                    self.df.drop(self.df.index[self.list_index_out_polygon], inplace=True)
+                    self.df.reset_index(drop = True, inplace=True)
+                    self.load_datatable_atribute_table()
+    
+                    self.df_SVM_Trainfeatures.drop(self.df_SVM_Trainfeatures.index[self.list_index_out_polygon], inplace=True)
+                    self.df_SVM_Trainfeatures.reset_index(drop = True, inplace=True)
+                    self.load_datatable_SVM_Trainfeatures()
+                    
+                    self.df_SVM_Trainlabels.drop(self.df_SVM_Trainlabels.index[self.list_index_out_polygon], inplace=True)
+                    self.df_SVM_Trainlabels.reset_index(drop = True, inplace=True)
+                    self.load_datatable_SVM_Trainlabels()
+    
+                    self.xy.drop(self.xy.index[self.list_index_out_polygon], inplace=True)
+                    self.xy.reset_index(drop = True, inplace=True)
+    
+                    self.z.drop(self.z.index[self.list_index_out_polygon], inplace=True)
+                    self.z.reset_index(drop = True, inplace=True)
+    
+            
+                #plotar mapa de pontos e Area Limite     
+                self.data = self.df[[self.Cord_X, self.Cord_Y, self.v_target]] 
+                self.data = np.array( self.data, dtype=np.float )
+    
+    
+        
+                plt1.close()
+                plt1.title('I.Moran: ' + str(self.moran_index) + ' P.Value: ' + str(self.p_value))
+                plt1.xlabel('Longitude (X)')
+                plt1.ylabel('Latitude  (Y)') 
+    
+                plt1.xlim(float(self.Cord_X_min-100), float(self.Cord_X_max+100))
+                plt1.ylim(float(self.Cord_Y_min-100), float(self.Cord_Y_max+100))        
+    
+    
+                interval_x = int((self.Cord_X_max-self.Cord_X_min)/5)
+                
+                if interval_x == 0:
+                    interval_x = 1 #int((self.Cord_X_max-self.Cord_X_min))
+    
+                xmarks=[i for i in range(int(self.Cord_X_min),int(self.Cord_X_max) , interval_x)]          
+                plt1.xticks(xmarks)
+     
+        
+                interval_y = int((self.Cord_Y_max-self.Cord_Y_min)/7)
+    
+                if interval_y == 0:
+                    interval_y = 1 #int((self.Cord_Y_max-self.Cord_Y_min))
+    
+                ymarks=[i for i in range(int(self.Cord_Y_min),int(self.Cord_Y_max) , interval_y)]          
+                plt1.yticks(ymarks)
+        
+        
+                plt1.plot(self.data_limite[:,0], self.data_limite[:,1])
+                #plt1.scatter(self.data[:,0], self.data[:,1])
+                plt1.scatter(self.data[:,0], self.data[:,1], c=self.data[:,2], cmap='RdYlGn')
+    
+                if len(self.list_index_outlier) > 0: 
+                   plt1.scatter(self.data_outlier[:,0], self.data_outlier[:,1], c=self.data_outlier[:,2], marker="x", cmap='RdYlGn')
+    
+                clb = plt1.colorbar(aspect=20)                                     #expessura do colorbar 
+                clb.ax.set_title(self.v_target)
+    
+                plt1.subplots_adjust(wspace=0.6, hspace=0.6, left=0.15, right=0.95, bottom=0.1, top=0.95)
+                  
+                plt1.savefig(os.path.join(     self.path_absolute , '0_Limite_Contorno.png'))
+                pixmap1 = QPixmap(os.path.join(self.path_absolute , '0_Limite_Contorno.png'))
+                self.dlg.label_pontos_limite.show()
+                self.dlg.label_pontos_limite.setPixmap(pixmap1)
+    
+    
+                self.SVM_Add_Coord = False                                         #set False to recalculate Test_Features in SVM   
+                #self.dlg.pushButton_SVM.setEnabled(False)
+                self.df_SVM_Testfeatures = pd.DataFrame(columns=[self.Cord_X, self.Cord_Y])      #dataframe vazio só com o nome das colunas 
+    
+    
+    
+                if self.SVM_Add_Feature == True:                                   #Adicionou features ao modelo SVM  -> serão retiradas pois alterou os parâmetros do SVM 
+        
+                    for i in range(2,len(self.list_cov_SVM)): 
+                        self.dlg.comboBox_SVM_Features_Adds.setCurrentIndex(i)
+                        self.pushButton_SVM_Remove_Feature_clicked()
+    
+    
+    
+                self.Contorno_Definido = True   #Definiu o contorno do mapa 
+        
+                #self.Variogram = False         #Não ajustou o Variograma 
+    
+    
+                self.dlg.label_SVM.hide()           
+                self.dlg.datatable_pontos_interpolados_SVM.setColumnCount(0)
+                self.dlg.datatable_pontos_interpolados_SVM.setRowCount(0)
+    
+                self.dlg.label_validacao_cruzada_SVM.hide()
+                self.dlg.datatable_validacao_cruzada_SVM.setColumnCount(0)
+                self.dlg.datatable_validacao_cruzada_SVM.setRowCount(0)
 
 
     def label_pontos_limite_clicked(self, value):
 
-        if self.Contorno_Definido == True:                
-            image = Image.open(os.path.join(self.path_absolute , '0_Limite_Contorno.png'))
-            image.show()
+        if system != 'Darwin':  #PIL do not is install in MacOS  
+
+            if self.Contorno_Definido == True:                
+                image = Image.open(os.path.join(self.path_absolute , '0_Limite_Contorno.png'))
+                image.show()
 
 
     def pushButton_File_Save_clicked(self):
@@ -2469,7 +2693,7 @@ class smart_map:
                 #Sill
                 self.dlg.horizontalSlider_Sill.valueChanged.disconnect()
         
-                self.dlg.horizontalSlider_Sill.setMinimum(self.C0_C_Minimum*1000)                    #último valor de gamma (eixo y)           
+                self.dlg.horizontalSlider_Sill.setMinimum(self.C0_C_Minimum*1000)                    #último valor de gamma (eixo y)
                 self.dlg.horizontalSlider_Sill.setMaximum(self.C0_C_Maximum*1000)                    #último valor de gamma (eixo y)         
                 self.dlg.horizontalSlider_Sill.setValue(C0_C*1000)                                   #Patamar           (Co + C)           
 
@@ -2529,14 +2753,19 @@ class smart_map:
 
         DMax_Maximum  = self.max_dist
         DMax_Minimum  = self.min_dist
-        C0_Maximum    = self.dlg.horizontalSlider_Nugget.maximum()
-        C0_Minimum    = self.dlg.horizontalSlider_Nugget.minimum()
-        C0_C_Maximum  = self.dlg.horizontalSlider_Sill.maximum()
-        C0_C_Minimum  = self.dlg.horizontalSlider_Sill.minimum()
-        Range_Maximum = self.dlg.horizontalSlider_Range.maximum()
-        Range_Minimum = self.dlg.horizontalSlider_Range.minimum()
+
+        C0_Maximum    = self.dlg.horizontalSlider_Nugget.maximum()/1000.0
+        C0_Minimum    = self.dlg.horizontalSlider_Nugget.minimum()/1000.0
+
+        C0_C_Maximum  = self.dlg.horizontalSlider_Sill.maximum()/1000.0
+        C0_C_Minimum  = self.dlg.horizontalSlider_Sill.minimum()/1000.0
+
+        Range_Maximum = self.dlg.horizontalSlider_Range.maximum()/1000.0
+        Range_Minimum = self.dlg.horizontalSlider_Range.minimum()/1000.0
+
         Raio_Maximum  = self.Raio_OK_Maximum
         Raio_Minimum  = self.Raio_OK_Minimum
+
         VB_Maximum    = self.VB_OK_Maximum
         VB_Minimum    = self.VB_OK_Minimum
 
@@ -2623,6 +2852,11 @@ class smart_map:
         #usado para construir cada lag
         self.lag, self.gamma, self.npoints = Semiv.Exp_Semiv(self.lag_distance, self.active_distance)
         
+
+        while ( len(self.npoints) < 2):   #deve ter no mínimo 2 pontos 
+            self.lag_distance = self.lag_distance - 1
+            self.lag, self.gamma, self.npoints = Semiv.Exp_Semiv(self.lag_distance, self.active_distance)
+
 
         #######################################################################
         #Calcula Variograma Inicial 
@@ -2784,7 +3018,8 @@ class smart_map:
         #self.dlg.lineEdit_Nugget.setText('%.3f'   % Nugget)                   #efeito pepita     (Co) 
         #self.dlg.lineEdit_Range.setText( '%.3f'    % Range)                   #alcance  efetivo  (A)
         #self.dlg.lineEdit_Sill.setText( '%.3f'     % Sill)                    #Patamar           (Co + C)           
-        
+
+        self.dlg.lineEdit_OK_lags_dist.setText('%.3f' % self.lag_distance)     #Lag (h)              
         self.dlg.lineEdit_Var_RMSE.setText('%.3f' % Rss)                       #RMSE
         self.dlg.lineEdit_Var_R2.setText('%.3f'   % R2)                        #R2
 
@@ -2832,6 +3067,7 @@ class smart_map:
 
         #Sill
         self.dlg.horizontalSlider_Sill.valueChanged.disconnect()
+
 
         self.dlg.horizontalSlider_Sill.setMaximum(((self.gamma[len(self.gamma)-1])*3)*1000)         #último valor de gamma (eixo y)         
         self.C0_C_Maximum = (self.gamma[len(self.gamma)-1])*3                                       #último valor de gamma (eixo y)       
@@ -2934,9 +3170,11 @@ class smart_map:
 
     def label_Variograma_clicked(self, value):
 
-        if self.Variogram == True:                
-            image = Image.open(os.path.join(self.path_absolute , '0_Variograma_' + self.VTarget_FileName + '.png'))
-            image.show()
+        if system != 'Darwin':  #PIL do not is install in MacOS  
+               
+            if self.Variogram == True:                
+                image = Image.open(os.path.join(self.path_absolute , '0_Variograma_' + self.VTarget_FileName + '.png'))
+                image.show()
 
 
 
@@ -3425,7 +3663,8 @@ class smart_map:
                 Output_Layer_Name      =                                   '1_Krig_' + self.VTarget_FileName
 
 
-                self.export_shapefile_to_qgis(Input_Table, Output_Layer_File_shp, Output_Layer_Name) 
+                self.export_shapefile_of_points_to_qgis(Input_Table, Output_Layer_File_shp, Output_Layer_Name) 
+                #self.export_shapefile_of_polygons_to_qgis(Input_Table, Output_Layer_File_shp, Output_Layer_Name) 
 
                     
                 self.dlg.mMapLayerComboBox.currentIndexChanged.connect(self.mMapLayerComboBox_changed) #connecta evento do combobox select Layer Qgis na tabela de atributos 
@@ -3466,40 +3705,54 @@ class smart_map:
                return 
 
             
-            plt4.close()
-            plt4.title(self.tr('Mapa Interpolado Krigagem'))
-            plt4.xlabel('Longitude (X)')
-            plt4.ylabel('Latitude  (Y)') 
+            plt3.close()
+            plt3.title(self.tr('Mapa Interpolado Krigagem'))
+            plt3.xlabel('Longitude (X)')
+            plt3.ylabel('Latitude  (Y)') 
     
-            plt4.xlim(float(self.Cord_X_min-100), float(self.Cord_X_max+100))
-            plt4.ylim(float(self.Cord_Y_min-100), float(self.Cord_Y_max+100))
+            plt3.xlim(float(self.Cord_X_min-100), float(self.Cord_X_max+100))
+            plt3.ylim(float(self.Cord_Y_min-100), float(self.Cord_Y_max+100))
 
-            xmarks=[i for i in range(int(self.Cord_X_min),int(self.Cord_X_max) , int((self.Cord_X_max-self.Cord_X_min)/5))]          
-            plt4.xticks(xmarks)
 
-            ymarks=[i for i in range(int(self.Cord_Y_min),int(self.Cord_Y_max) , int((self.Cord_Y_max-self.Cord_Y_min)/7))]          
-            plt4.yticks(ymarks)
+            interval_x = int((self.Cord_X_max-self.Cord_X_min)/5)
+            
+            if interval_x == 0:
+                interval_x = 1 #int((self.Cord_X_max-self.Cord_X_min))
 
-            plt4.scatter(self.arr_cut[:,0], self.arr_cut[:,1], c=self.arr_cut[:,2], cmap='RdYlGn')
 
-            clb = plt4.colorbar(aspect=20)                                     #expessura do colorbar 
+            xmarks=[i for i in range(int(self.Cord_X_min),int(self.Cord_X_max) , interval_x)]          
+            plt3.xticks(xmarks)
+
+
+            interval_y = int((self.Cord_Y_max-self.Cord_Y_min)/7)
+            
+            if interval_y == 0:
+                interval_y = 1 #int((self.Cord_X_max-self.Cord_X_min))
+
+            ymarks=[i for i in range(int(self.Cord_Y_min),int(self.Cord_Y_max) , interval_y)]          
+            plt3.yticks(ymarks)
+
+
+            plt3.scatter(self.arr_cut[:,0], self.arr_cut[:,1], c=self.arr_cut[:,2], cmap='RdYlGn') #plotar gráfico de Mapa Interpolado
+
+            clb = plt3.colorbar(aspect=20)                                     #expessura do colorbar 
             clb.ax.set_title(self.v_target)
     
-            plt4.subplots_adjust(wspace=0.6, hspace=0.6, left=0.15, right=1.0, bottom=0.1, top=0.95)
+            plt3.subplots_adjust(wspace=0.6, hspace=0.6, left=0.15, right=1.0, bottom=0.1, top=0.95)
 
-            plt4.ticklabel_format(style='plain', useOffset=False, axis='both') #não exibir coordenadas em notação cientifica 
+            plt3.ticklabel_format(style='plain', useOffset=False, axis='both') #não exibir coordenadas em notação cientifica 
 
             #janela do plot exibir as coordenadas em notação decimal. 
-            ax = plt4.gca()
+            ax = plt3.gca()
             ax.format_coord = lambda x,y: '%10d, %10d' % (x,y)
                        
-            plt4.savefig(os.path.join(     self.path_absolute , '1_Krig_' + self.VTarget_FileName + '_Grid_Map.png'))
+            plt3.savefig(os.path.join(     self.path_absolute , '1_Krig_' + self.VTarget_FileName + '_Grid_Map.png'))
             pixmap4 = QPixmap(os.path.join(self.path_absolute , '1_Krig_' + self.VTarget_FileName + '_Grid_Map.png'))
             self.dlg.label_Krigagem.show()
             self.dlg.label_Krigagem.setPixmap(pixmap4)
     
             if self.dlg.checkBox_Qgis_Maps.isChecked():             
-                plt4.show()         
+                plt3.show()         
 
             
             self.load_maps_to_generate_ZM()                              
@@ -3676,9 +3929,11 @@ class smart_map:
 
     def label_Krigagem_clicked(self, value):
 
-        if self.Krigagem == True:                
-            image = Image.open(os.path.join(self.path_absolute , '1_Krig_' + self.VTarget_FileName + '_Grid_Map.png'))
-            image.show()
+        if system != 'Darwin':  #PIL do not is install in MacOS  
+
+            if self.Krigagem == True:                
+                image = Image.open(os.path.join(self.path_absolute , '1_Krig_' + self.VTarget_FileName + '_Grid_Map.png'))
+                image.show()
 
 
 
@@ -3935,9 +4190,11 @@ class smart_map:
 
     def label_validacao_cruzada_OK_clicked(self, value):
 
-       if self.Validacao_Cruzada_OK == True:                
-           image = Image.open(os.path.join(self.path_absolute , '1_Krig_' + self.VTarget_FileName + '_CV.png'))
-           image.show()
+        if system != 'Darwin':  #PIL do not is install in MacOS  
+        
+            if self.Validacao_Cruzada_OK == True:                
+               image = Image.open(os.path.join(self.path_absolute , '1_Krig_' + self.VTarget_FileName + '_CV.png'))
+               image.show()
            
 
 
@@ -4586,6 +4843,61 @@ class smart_map:
                         #self.df[Cord_Z].fillna(value=df[Cord_Z].mean(), inplace=True)       #preenche com o valor médio da coluna 
                         self.df[Cord_Z].fillna(method = 'backfill', inplace = True)          #preenche com o valor anterior ao do nan 
                         #self.df[Cord_Z].fillna(method = 'ffill', inplace=True)              #preenche com o valor posterir ao do nan 
+
+
+                    ###########################################################
+                    #substituir outliers pelo valor médio da coluna
+                    if self.dlg.checkBox_Eliminate_Outilier.isChecked():
+                        
+                        list_index_outlier = []
+                        list_index_outlier = functions.localizar_outlier(self.df, Cord_Z)
+                        
+                        
+                        #calcular mean com base nos 16 vizinhos + proximos. 
+                        
+                        features = np.column_stack([self.df[self.Cord_X], self.df[self.Cord_Y]])
+                        
+                        for cont in list_index_outlier:                                      #cont variando para cada ponto de outlier
+               
+                            vt2 = np.copy(np.array(self.df[Cord_Z]))                              #Array 1d (141,) com os valores da covariavel 
+                            vt2 = np.delete(vt2, (cont), axis=0)                                  #deleta a linha cont da matriz - vt2 
+                                         
+            
+                            features2 = np.copy(features)                                         #Array 1d (141,) com os valores da covariavel 
+                            features2 = np.delete(features2, (cont), axis=0)                      #deleta a linha cont da matriz - features2 
+                             
+                            gridxy = np.c_[features2[:,0], features2[:,1]]                        #Array 2d com os valores (140,2) com os valores de x, y 
+                            
+                            ## ------------- Creating KDTree
+                            tree = spatial.cKDTree(gridxy)                                        #objeto com as distâncias entre os pontos  
+                                   
+                            p = np.array([features[cont,0], features[cont,1]])                    #p = ponto (x,y) de features 
+            
+                                
+                            raio_busca = float(self.dlg.lineEdit_SVM_VBRaio.text())
+                            neigs      = tree.query_ball_point(p, raio_busca)                     #neigs     = indice no vetor de array dos pontos a 50m de distancia  
+
+                            if len(neigs) > n_neig:                                               #nr. de vizinhos encontrados dentro do raio de busca excedeu o máximo nr. de vizinhos permitido -> usa o máximo de vizinhos permitido  
+                                distances, points_idx = tree.query(p, k=n_neig)                   #distances     = distancia de p aos 16 pontos mais proximos em ordem crescente 
+                            elif len(neigs) < 2:                             
+                                distances, points_idx = tree.query(p, k=3)                        #distances = distancia de p aos 3 pontos mais proximos em ordem crescente  
+                            else: 
+                                distances, points_idx = tree.query(p, k=len(neigs))               #distances = distancia de p aos neigs pontos mais proximos em ordem crescente 
+
+                                                                                                  #points_idx    = indice no vetor de array dos 16 pontos mais proximos 
+                            vt_vals = vt2[points_idx]                                             #vt_vals       = valores observados dos 16 pontos mais proximos         
+                           
+                            value = functions.mean(distances, vt_vals, weight_IDW)                #value = valor obtido por IDW no ponto p apartir dos 16 vizinhos 
+
+                            
+                            #z_mean = self.df[Cord_Z].mean() 
+                            #print('valor medio do ponto:', cont, value)
+        
+        
+                            self.df.loc[cont, Cord_Z] = value
+
+
+                        #print('df com valores substituidos pela media \n:', self.df[Cord_Z].to_string())
 
 
                     ###########################################################
@@ -5360,7 +5672,7 @@ class smart_map:
                 if len(self.list_cov_SVM) == 2:                                #so tem coordenadas (X, Y)
     
                     self.SVM_Add_Feature = False 
-                    self.dlg.pushButton_SVM.setEnabled(False)
+                    #self.dlg.pushButton_SVM.setEnabled(False)
                     self.dlg.pushButton_SVM_Remove_Feature.setEnabled(False)            
 
 
@@ -5422,9 +5734,10 @@ class smart_map:
     def  pushButton_SVM_clicked(self):    #Realizar interpolação utilizando SVM
 
              
+        '''
+        #if ((self.SVM_Add_Coord == False) or (self.SVM_Add_Feature == False)): #não adicionou features ao modelo 
 
-        if ((self.SVM_Add_Coord == False) or (self.SVM_Add_Feature == False)): #não adicionou features ao modelo 
-
+        if (self.SVM_Add_Coord == False): #não adicionou coordenadas ao modelo         
             #mensagem de retorno ao usuário 
             msg_box = QMessageBox()
             msg_box.setWindowIcon(QtGui.QIcon(self.icon_path))        
@@ -5434,269 +5747,377 @@ class smart_map:
             msg_box.exec_()              
          
         else: 
-           
-            self.dlg.tabWidget_Interpolacao_SVM.setCurrentIndex(2)             #aba com mapa interpolado 
-             
-            #set the max Kfold to 20 points in each fold
-            k_folds = round(len(self.data)/20) 
-    
-            if k_folds < 2: 
-               k_folds = 2  
-            elif k_folds > 5: 
-               k_folds = 5 
-         
-            #k_folds    =  self.dlg.spinBox_KFolds_CV.value()                  #numero de K-Folds para CV
+        '''
+        
+        self.dlg.tabWidget_Interpolacao_SVM.setCurrentIndex(2)             #aba com mapa interpolado 
 
-            features = np.array(self.df_SVM_Trainfeatures, dtype=np.float)
-         
-            labels =   np.array(self.df_SVM_Trainlabels   , dtype=np.float)
-          
-         
-            maximum = (len(self.grid_xy) * 3)  + 5            
+        ###############################################################
+        #definindo o dataframe df_SVM_Testfeatures -> Colunas (X, Y) para o grid de interpolação 
+
+
+        if (len(self.df_SVM_Testfeatures) == 0):                           #só tem CoordX e Coordy  e dataframe está fazio 
+
+           
+            self.gridx = np.arange(float(self.Cord_X_min), float(self.Cord_X_max), self.Pixel_Size_X)
+            self.gridy = np.arange(float(self.Cord_Y_min), float(self.Cord_Y_max), self.Pixel_Size_Y)        
+    
+
+            maximum = (len(self.gridx) * len(self.gridy)) 
             progress = QProgressDialog(self.tr('Machine Learning - Support Vector Machine...'), self.tr('Cancelar'),  1, maximum, self.dlg)
             progress.setWindowTitle('Smart-Map')
             progress.show() 
-            progress.setCancelButton(None)                                     #remove button cancel 
-            #progress.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, False)    #disable button 'X' 
-            progress.setWindowModality(QtCore.Qt.WindowModal)                  #modal for parent form 
-            #progress.setWindowModality(QtCore.Qt.ApplicationModal)            #modal for application 
+            progress.setCancelButton(None)                                 #remove button cancel 
+            #progress.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, False)#disable button 'X' 
+            progress.setWindowModality(QtCore.Qt.WindowModal)              #modal for parent form 
+            #progress.setWindowModality(QtCore.Qt.ApplicationModal)        #modal for application 
             time.sleep(0.1)
 
-
-            ###################################################################
-            #otimização dos parametros do SVM
-
     
-            cont = 1 
-            progress.setValue(cont)                        
-            if progress.wasCanceled():                          
-               progress.close() 
-               return 
-  
-            self.norm = StandardScaler()   #objeto para normalizar as features e labels do SVM 
-    
-            #calculando C e gamma ótimo atraves do GridSearchCV                     
-            C_average, gamma_average  = functions.svr_param_selection(         self.norm, features, labels, k_folds)  #usa GridSearchCV     
-            #C_average, gamma_average = functions.svr_param_selection_optimize(self.norm, features, labels, k_folds)  #usa scikit-optimize 
-
-        
-    
-            ###################################################################
-            #Treinamento do Modelo de Machine Learning 
-            
-            cont = cont + 1 
-            progress.setValue(cont)                        
-            if progress.wasCanceled():                          
-               progress.close() 
-               return 
-     
-     
-            self.svr = svm.SVR(kernel = 'rbf', C = C_average, gamma = gamma_average)
-    
-       
-            #Split the data into training and testing sets
-            #quando separa escolhe-se ao aleatório quais serão para treianamento e quais serão para teste, não mantendo a mesma ordem dos vetores originais    
-            train_features, test_features, train_labels, test_labels = train_test_split(features, labels, test_size = 1, random_state = 42)
-            
-            
-            #considerando que todos os valores amostrados serão considerados para treinamento 
-            train_features = np.copy(features)
-            train_labels = np.copy(labels)
-            
-            #considerando que todos os valores do grid [7860 pontos] serão considerados para teste
-            test_features = np.copy(self.features_grid)
-            #test_labels  = np.copy(test_labels)
-           
-        
-            self.norm  =  self.norm.fit(train_features)           #ajusta o vetor de features 141 pontos      (x, y, IDW_cov1, .... IDW_covn)  
-            #self.norm =  self.norm.fit(test_features)            #ajustar  o vetor features_grid 7860 pontos (x, y, IDW_cov1, .... IDW_covn) 
-           
-        
-            train_features = self.norm.transform(train_features)  #normalizar o vetor de features e labels 
-            test_features  = self.norm.transform(test_features )  #normalizar o vetor features_grid (x, y, IDW_cov1, .... IDW_covn) 
-        
-              
-            # Instantiate model 
-            #SVR(C=1.0, cache_size=200, coef0=0.0, degree=3, epsilon=0.1, gamma='auto_deprecated', kernel='rbf', max_iter=-1, shrinking=True, tol=0.001, verbose=False)
-           
-            # Instantiate model 
-            #svr = svm.SVR()
-          
-            # Train the model on training data
-            self.svr.fit(train_features, train_labels)
-            
-            predictions = self.svr.predict(test_features)  #valores preditos -> para gerar o mapa de predição [7860]   
-            
-            self.arr_cut =  np.column_stack([self.grid_xy[:,0], self.grid_xy[:,1], predictions])
-     
-            #######################################################################
-            #definindo o dataframe: df_pontos_interpolados_SVM
-  
-         
-            df_pontos_interpolados_SVM = pd.DataFrame(np.atleast_2d(self.arr_cut), columns=[self.Cord_X, self.Cord_Y, self.v_target])
-            df_pontos_interpolados_SVM.to_csv(os.path.join(self.path_absolute ,  '1_SVM_' + self.VTarget_FileName + '_Grid_Map.csv'), sep=',', index = False, encoding='utf-8')
-            df_pontos_interpolados_SVM.to_csv(os.path.join(self.path_absolute ,  '1_SVM_' + self.VTarget_FileName + '_Grid_Map.svm'), sep=',', index = False, encoding='utf-8')
-        
-      
-            self.dlg.datatable_pontos_interpolados_SVM.setColumnCount(len(df_pontos_interpolados_SVM.columns))
-            self.dlg.datatable_pontos_interpolados_SVM.setRowCount(len(df_pontos_interpolados_SVM.index))
-            
-            
-            #preencher o cabeçalho
-            try:                       
-    
-                cols = [] 
-                cols = list(df_pontos_interpolados_SVM.columns.values)  
-                cols[2] = self.tr('Z.Predito')
-                self.dlg.datatable_pontos_interpolados_SVM.setHorizontalHeaderLabels(cols)
-    
-            except AttributeError: 
-
-                #mensagem de retorno ao usuário 
-                msg_box = QMessageBox()
-                msg_box.setWindowIcon(QtGui.QIcon(self.icon_path))        
-                msg_box.setIcon(QMessageBox.Warning)
-                msg_box.setWindowTitle(self.tr('Mensagem'))
-                msg_box.setText(self.tr('Erro ao carregar tabela. Valor Inválido!'))
-                msg_box.exec_()
-                
-           
-            #preencher as linhas da planilha 
-            try: 
-                for i in range(len(df_pontos_interpolados_SVM.index)):         #linhas 
-                    for j in range(len(df_pontos_interpolados_SVM.columns)):   #colunas 
-
-                        valor = df_pontos_interpolados_SVM.iloc[i,j]
-
-                        if valor.dtype == "float64": 
-                            valor = '%.3f' % valor                       
-                        
-                        valor = QTableWidgetItem(str(valor))                  
-                        self.dlg.datatable_pontos_interpolados_SVM.setItem(i,j, valor)   
-
-                        cont = cont + 1 
-                        progress.setValue(cont)                        
-                        if progress.wasCanceled():                          
-                           progress.close() 
-                           return 
-     
-            except AttributeError: 
-
-                #mensagem de retorno ao usuário 
-                msg_box = QMessageBox()
-                msg_box.setWindowIcon(QtGui.QIcon(self.icon_path))        
-                msg_box.setIcon(QMessageBox.Warning)
-                msg_box.setWindowTitle(self.tr('Mensagem'))
-                msg_box.setText(self.tr('Erro ao carregar tabela. Valor Inválido!'))
-                msg_box.exec_()
-
-    
-            self.dlg.datatable_pontos_interpolados_SVM.resizeColumnsToContents();
-    
-            self.dlg.datatable_pontos_interpolados_SVM.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers) #read-only para as celulas do datatable
-    
-
-            ###################################################################
-            #Exportando arquivo ShapeFile 
-
-            cont = cont + 1 
-            progress.setValue(cont)                        
-            if progress.wasCanceled():                          
-               progress.close() 
-               return 
-
-
-            if self.dlg.checkBox_Qgis_Vector.isChecked(): 
-
-                self.dlg.mMapLayerComboBox.currentIndexChanged.disconnect()    #disconnecta evento do combobox select Layer Qgis na tabela de atributos 
-                
-                Input_Table            = os.path.join(self.path_absolute , '1_SVM_' + self.VTarget_FileName + '_Grid_Map.csv') #set the filepath for the input CSV
-                Output_Layer_File_shp  = os.path.join(self.path_absolute , '1_SVM_' + self.VTarget_FileName + '_Grid_Map.shp') #set the filepath for the output shapefile
-                Output_Layer_Name      =                                   '1_SVM_' + self.VTarget_FileName
-
-
-                self.export_shapefile_to_qgis(Input_Table, Output_Layer_File_shp, Output_Layer_Name) 
-
-                    
-                self.dlg.mMapLayerComboBox.currentIndexChanged.connect(self.mMapLayerComboBox_changed) #connecta evento do combobox select Layer Qgis na tabela de atributos 
-
-                
-            ###################################################################
-            #Exportando arquivo RasterFile  
-
-            cont = cont + 1 
-            progress.setValue(cont)                        
-            if progress.wasCanceled():                          
-               progress.close() 
-               return 
-
-
-            if self.dlg.checkBox_Qgis_Raster.isChecked(): 
- 
-
-                # get the filenames
-                Input_Table            =                                   '1_SVM_' + self.VTarget_FileName + '_Grid_Map.csv'
-                Output_Layer_File_tiff = os.path.join(self.path_absolute , '1_SVM_' + self.VTarget_FileName + '_Grid_Map.tiff')
-                Output_Layer_Name      =                                   '1_SVM_' + self.VTarget_FileName
-                z_field   = self.v_target
-
-                self.dlg.mMapLayerComboBox.currentIndexChanged.disconnect()
-
-                self.export_raster_to_qgis(Input_Table, Output_Layer_File_tiff, Output_Layer_Name, z_field) 
-
-                self.dlg.mMapLayerComboBox.currentIndexChanged.connect(self.mMapLayerComboBox_changed)
-
-
-            ###################################################################
-            #Plotando o Mapa Interpolado por SVM 
-
-            cont = cont + 1 
-            progress.setValue(cont)                        
-            if progress.wasCanceled():                          
-               progress.close() 
-               return 
-            
-            plt4.close()
-            plt4.title(self.tr('Mapa Interpolado SVM'))
-            plt4.xlabel('Longitude (X)')
-            plt4.ylabel('Latitude  (Y)') 
-    
-            plt4.xlim(float(self.Cord_X_min-100), float(self.Cord_X_max+100))
-            plt4.ylim(float(self.Cord_Y_min-100), float(self.Cord_Y_max+100))
-
-            xmarks=[i for i in range(int(self.Cord_X_min),int(self.Cord_X_max) , int((self.Cord_X_max-self.Cord_X_min)/5))]          
-            plt4.xticks(xmarks)
-    
-            ymarks=[i for i in range(int(self.Cord_Y_min),int(self.Cord_Y_max) , int((self.Cord_Y_max-self.Cord_Y_min)/7))]          
-            plt4.yticks(ymarks)
-            
-            plt4.scatter(self.grid_xy[:,0], self.grid_xy[:,1], c=predictions, cmap='RdYlGn')    
-            
-            clb = plt4.colorbar(aspect=20)                                     #expessura do colorbar 
-            clb.ax.set_title(self.v_target)
-    
-            plt4.subplots_adjust(wspace=0.6, hspace=0.6, left=0.15, right=1.0, bottom=0.1, top=0.95)
-
-            plt4.ticklabel_format(style='plain', useOffset=False, axis='both')
-
-            #janela do plot exibir as coordenadas em notação decimal. 
-            ax = plt4.gca()
-            ax.format_coord = lambda x,y: '%10d, %10d' % (x,y)
-            
-            plt4.savefig(     os.path.join(self.path_absolute , '1_SVM_' + self.VTarget_FileName + '_Grid_Map.png'))
-            pixmap4 = QPixmap(os.path.join(self.path_absolute , '1_SVM_' + self.VTarget_FileName + '_Grid_Map.png'))
-            self.dlg.label_SVM.show()
-            self.dlg.label_SVM.setPixmap(pixmap4)
-    
-            if self.dlg.checkBox_Qgis_Maps.isChecked(): 
-                plt4.show()         
-
-                           
-            self.SVM = True
-            
-            self.load_maps_to_generate_ZM()                              
+            #monta o grid_xy  ['x', 'y'] com 7860 linhas 
+            cont = 1
+            lista_xy = []
+            for i in range(len(self.gridx)):
+                for j in range(len(self.gridy)): 
+                    lista_xy.append([self.gridx[i]+(self.Pixel_Size_X/2), self.gridy[j]-(self.Pixel_Size_Y/2)])   
+                    cont = cont + 1 
+                    progress.setValue(cont)                        
+                    if progress.wasCanceled():                          
+                       progress.close() 
+                       return 
 
             progress.close() 
+
+            arr_xy = np.array(lista_xy)
+            
+           
+            if self.dlg.checkBox_Area_Contorno.isChecked(): 
+
+                if len(self.df_limite) <= 0:  #usuário selecionou o checkbox mas não clicou no botão para definir o contorno 
+                    if (self.dlg.mMapLayerComboBox_AreaCont.currentIndex() >= 0): 
+                        self.pushButton_Area_Contorno_clicked()    
+                        
+                lista_cut_xy = []
+    
+                polygono = np.array(self.df_limite, dtype=np.float)        #define o polygono = area de contorno 
+                bbPath = mplPath.Path(polygono)
+
+                maximum = len(arr_xy)
+                progress = QProgressDialog(self.tr('Gerando grid para os pontos de interpolação (x, y, z): '), self.tr('Cancelar'),  1, maximum, self.dlg)
+                progress.setWindowTitle('Smart-Map')
+                progress.show() 
+                progress.setCancelButton(None)                                     #remove button cancel 
+                #progress.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, False)    #disable button 'X' 
+                progress.setWindowModality(QtCore.Qt.WindowModal)                  #modal for parent form 
+                #progress.setWindowModality(QtCore.Qt.ApplicationModal)            #modal for application 
+                time.sleep(0.1)
+
+               
+                cont = 1
+                for i in range(len(arr_xy)):
+                    ponto = (arr_xy[i,0], arr_xy[i,1])
+                    if bbPath.contains_point(ponto): 
+                        lista_cut_xy.append([arr_xy[i,0], arr_xy[i,1]])
+
+                    cont = cont + 1 
+                    progress.setValue(cont)                        
+                    if progress.wasCanceled():                          
+                       progress.close() 
+                       return 
+
+                progress.close() 
+                 
+                arr_xy = np.array(lista_cut_xy)
+                    
+            self.grid_xy = np.array(arr_xy) 
+             
+
+            self.df_SVM_Testfeatures = pd.DataFrame(np.atleast_2d(self.grid_xy), columns=[self.Cord_X, self.Cord_Y]) 
+    
+    
+            
+            self.features_grid = np.array(self.grid_xy)
+
+
+        ###############################################################
+        #termino do preenchimento do dataframe df_SVM_Testfeatures -> Colunas (X, Y) para o grid de interpolação 
+
+
+             
+        #set the max Kfold to 20 points in each fold
+        k_folds = round(len(self.data)/20) 
+
+        if k_folds < 2: 
+           k_folds = 2  
+        elif k_folds > 5: 
+           k_folds = 5 
+     
+        #k_folds    =  self.dlg.spinBox_KFolds_CV.value()                  #numero de K-Folds para CV
+
+        features = np.array(self.df_SVM_Trainfeatures, dtype=np.float)
+     
+        labels =   np.array(self.df_SVM_Trainlabels   , dtype=np.float)
+      
+     
+        maximum = (len(self.grid_xy) * 3)  + 5            
+        progress = QProgressDialog(self.tr('Machine Learning - Support Vector Machine...'), self.tr('Cancelar'),  1, maximum, self.dlg)
+        progress.setWindowTitle('Smart-Map')
+        progress.show() 
+        progress.setCancelButton(None)                                     #remove button cancel 
+        #progress.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, False)    #disable button 'X' 
+        progress.setWindowModality(QtCore.Qt.WindowModal)                  #modal for parent form 
+        #progress.setWindowModality(QtCore.Qt.ApplicationModal)            #modal for application 
+        time.sleep(0.1)
+
+
+        ###################################################################
+        #otimização dos parametros do SVM
+
+
+        cont = 1 
+        progress.setValue(cont)                        
+        if progress.wasCanceled():                          
+           progress.close() 
+           return 
+  
+        self.norm = StandardScaler()   #objeto para normalizar as features e labels do SVM 
+
+        #calculando C e gamma ótimo atraves do GridSearchCV                     
+        C_average, gamma_average  = functions.svr_param_selection(         self.norm, features, labels, k_folds)  #usa GridSearchCV     
+        #C_average, gamma_average = functions.svr_param_selection_optimize(self.norm, features, labels, k_folds)  #usa scikit-optimize 
+
+    
+
+        ###################################################################
+        #Treinamento do Modelo de Machine Learning 
+        
+        cont = cont + 1 
+        progress.setValue(cont)                        
+        if progress.wasCanceled():                          
+           progress.close() 
+           return 
+ 
+ 
+        self.svr = svm.SVR(kernel = 'rbf', C = C_average, gamma = gamma_average)
+
+   
+        #Split the data into training and testing sets
+        #quando separa escolhe-se ao aleatório quais serão para treianamento e quais serão para teste, não mantendo a mesma ordem dos vetores originais    
+        train_features, test_features, train_labels, test_labels = train_test_split(features, labels, test_size = 1, random_state = 42)
+        
+        
+        #considerando que todos os valores amostrados serão considerados para treinamento 
+        train_features = np.copy(features)
+        train_labels = np.copy(labels)
+        
+        #considerando que todos os valores do grid [7860 pontos] serão considerados para teste
+        test_features = np.copy(self.features_grid)
+        #test_labels  = np.copy(test_labels)
+       
+    
+        self.norm  =  self.norm.fit(train_features)           #ajusta o vetor de features 141 pontos      (x, y, IDW_cov1, .... IDW_covn)  
+        #self.norm =  self.norm.fit(test_features)            #ajustar  o vetor features_grid 7860 pontos (x, y, IDW_cov1, .... IDW_covn) 
+       
+    
+        train_features = self.norm.transform(train_features)  #normalizar o vetor de features e labels 
+        test_features  = self.norm.transform(test_features )  #normalizar o vetor features_grid (x, y, IDW_cov1, .... IDW_covn) 
+    
+          
+        # Instantiate model 
+        #SVR(C=1.0, cache_size=200, coef0=0.0, degree=3, epsilon=0.1, gamma='auto_deprecated', kernel='rbf', max_iter=-1, shrinking=True, tol=0.001, verbose=False)
+       
+        # Instantiate model 
+        #svr = svm.SVR()
+      
+        # Train the model on training data
+        self.svr.fit(train_features, train_labels)
+        
+        predictions = self.svr.predict(test_features)  #valores preditos -> para gerar o mapa de predição [7860]   
+        
+        self.arr_cut =  np.column_stack([self.grid_xy[:,0], self.grid_xy[:,1], predictions])
+ 
+        #######################################################################
+        #definindo o dataframe: df_pontos_interpolados_SVM
+  
+     
+        df_pontos_interpolados_SVM = pd.DataFrame(np.atleast_2d(self.arr_cut), columns=[self.Cord_X, self.Cord_Y, self.v_target])
+        df_pontos_interpolados_SVM.to_csv(os.path.join(self.path_absolute ,  '1_SVM_' + self.VTarget_FileName + '_Grid_Map.csv'), sep=',', index = False, encoding='utf-8')
+        df_pontos_interpolados_SVM.to_csv(os.path.join(self.path_absolute ,  '1_SVM_' + self.VTarget_FileName + '_Grid_Map.svm'), sep=',', index = False, encoding='utf-8')
+    
+  
+        self.dlg.datatable_pontos_interpolados_SVM.setColumnCount(len(df_pontos_interpolados_SVM.columns))
+        self.dlg.datatable_pontos_interpolados_SVM.setRowCount(len(df_pontos_interpolados_SVM.index))
+        
+        
+        #preencher o cabeçalho
+        try:                       
+
+            cols = [] 
+            cols = list(df_pontos_interpolados_SVM.columns.values)  
+            cols[2] = self.tr('Z.Predito')
+            self.dlg.datatable_pontos_interpolados_SVM.setHorizontalHeaderLabels(cols)
+
+        except AttributeError: 
+
+            #mensagem de retorno ao usuário 
+            msg_box = QMessageBox()
+            msg_box.setWindowIcon(QtGui.QIcon(self.icon_path))        
+            msg_box.setIcon(QMessageBox.Warning)
+            msg_box.setWindowTitle(self.tr('Mensagem'))
+            msg_box.setText(self.tr('Erro ao carregar tabela. Valor Inválido!'))
+            msg_box.exec_()
+            
+       
+        #preencher as linhas da planilha 
+        try: 
+            for i in range(len(df_pontos_interpolados_SVM.index)):         #linhas 
+                for j in range(len(df_pontos_interpolados_SVM.columns)):   #colunas 
+
+                    valor = df_pontos_interpolados_SVM.iloc[i,j]
+
+                    if valor.dtype == "float64": 
+                        valor = '%.3f' % valor                       
+                    
+                    valor = QTableWidgetItem(str(valor))                  
+                    self.dlg.datatable_pontos_interpolados_SVM.setItem(i,j, valor)   
+
+                    cont = cont + 1 
+                    progress.setValue(cont)                        
+                    if progress.wasCanceled():                          
+                       progress.close() 
+                       return 
+ 
+        except AttributeError: 
+
+            #mensagem de retorno ao usuário 
+            msg_box = QMessageBox()
+            msg_box.setWindowIcon(QtGui.QIcon(self.icon_path))        
+            msg_box.setIcon(QMessageBox.Warning)
+            msg_box.setWindowTitle(self.tr('Mensagem'))
+            msg_box.setText(self.tr('Erro ao carregar tabela. Valor Inválido!'))
+            msg_box.exec_()
+
+
+        self.dlg.datatable_pontos_interpolados_SVM.resizeColumnsToContents();
+
+        self.dlg.datatable_pontos_interpolados_SVM.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers) #read-only para as celulas do datatable
+
+
+        ###################################################################
+        #Exportando arquivo ShapeFile 
+
+        cont = cont + 1 
+        progress.setValue(cont)                        
+        if progress.wasCanceled():                          
+           progress.close() 
+           return 
+
+
+        if self.dlg.checkBox_Qgis_Vector.isChecked(): 
+
+            self.dlg.mMapLayerComboBox.currentIndexChanged.disconnect()    #disconnecta evento do combobox select Layer Qgis na tabela de atributos 
+            
+            Input_Table            = os.path.join(self.path_absolute , '1_SVM_' + self.VTarget_FileName + '_Grid_Map.csv') #set the filepath for the input CSV
+            Output_Layer_File_shp  = os.path.join(self.path_absolute , '1_SVM_' + self.VTarget_FileName + '_Grid_Map.shp') #set the filepath for the output shapefile
+            Output_Layer_Name      =                                   '1_SVM_' + self.VTarget_FileName
+
+
+            self.export_shapefile_of_points_to_qgis(Input_Table, Output_Layer_File_shp, Output_Layer_Name) 
+            #self.export_shapefile_of_polygons_to_qgis(Input_Table, Output_Layer_File_shp, Output_Layer_Name) 
+
+                
+            self.dlg.mMapLayerComboBox.currentIndexChanged.connect(self.mMapLayerComboBox_changed) #connecta evento do combobox select Layer Qgis na tabela de atributos 
+
+            
+        ###################################################################
+        #Exportando arquivo RasterFile  
+
+        cont = cont + 1 
+        progress.setValue(cont)                        
+        if progress.wasCanceled():                          
+           progress.close() 
+           return 
+
+
+        if self.dlg.checkBox_Qgis_Raster.isChecked(): 
+ 
+
+            # get the filenames
+            Input_Table            =                                   '1_SVM_' + self.VTarget_FileName + '_Grid_Map.csv'
+            Output_Layer_File_tiff = os.path.join(self.path_absolute , '1_SVM_' + self.VTarget_FileName + '_Grid_Map.tiff')
+            Output_Layer_Name      =                                   '1_SVM_' + self.VTarget_FileName
+            z_field   = self.v_target
+
+            self.dlg.mMapLayerComboBox.currentIndexChanged.disconnect()
+
+            self.export_raster_to_qgis(Input_Table, Output_Layer_File_tiff, Output_Layer_Name, z_field) 
+
+            self.dlg.mMapLayerComboBox.currentIndexChanged.connect(self.mMapLayerComboBox_changed)
+
+
+        ###################################################################
+        #Plotando o Mapa Interpolado por SVM 
+
+        cont = cont + 1 
+        progress.setValue(cont)                        
+        if progress.wasCanceled():                          
+           progress.close() 
+           return 
+        
+        plt3.close()
+        plt3.title(self.tr('Mapa Interpolado SVM'))
+        plt3.xlabel('Longitude (X)')
+        plt3.ylabel('Latitude  (Y)') 
+
+        plt3.xlim(float(self.Cord_X_min-100), float(self.Cord_X_max+100))
+        plt3.ylim(float(self.Cord_Y_min-100), float(self.Cord_Y_max+100))
+
+
+        interval_x = int((self.Cord_X_max-self.Cord_X_min)/5)
+        
+        if interval_x == 0:
+            interval_x = 1 #int((self.Cord_X_max-self.Cord_X_min))
+
+        xmarks=[i for i in range(int(self.Cord_X_min),int(self.Cord_X_max) , interval_x)]          
+        plt3.xticks(xmarks)
+
+
+        interval_y = int((self.Cord_Y_max-self.Cord_Y_min)/7)
+        
+        if interval_y == 0:
+            interval_y = 1 #int((self.Cord_X_max-self.Cord_X_min))
+
+
+        ymarks=[i for i in range(int(self.Cord_Y_min),int(self.Cord_Y_max) , interval_y)]          
+        plt3.yticks(ymarks)
+
+        
+        plt3.scatter(self.grid_xy[:,0], self.grid_xy[:,1], c=predictions, cmap='RdYlGn')    
+        
+        clb = plt3.colorbar(aspect=20)                                     #expessura do colorbar 
+        clb.ax.set_title(self.v_target)
+
+        plt3.subplots_adjust(wspace=0.6, hspace=0.6, left=0.15, right=1.0, bottom=0.1, top=0.95)
+
+        plt3.ticklabel_format(style='plain', useOffset=False, axis='both')
+
+        #janela do plot exibir as coordenadas em notação decimal. 
+        ax = plt3.gca()
+        ax.format_coord = lambda x,y: '%10d, %10d' % (x,y)
+        
+        plt3.savefig(     os.path.join(self.path_absolute , '1_SVM_' + self.VTarget_FileName + '_Grid_Map.png'))
+        pixmap4 = QPixmap(os.path.join(self.path_absolute , '1_SVM_' + self.VTarget_FileName + '_Grid_Map.png'))
+        self.dlg.label_SVM.show()
+        self.dlg.label_SVM.setPixmap(pixmap4)
+
+        if self.dlg.checkBox_Qgis_Maps.isChecked(): 
+            plt3.show()         
+
+                       
+        self.SVM = True
+        
+        self.load_maps_to_generate_ZM()                              
+
+        progress.close() 
 
 
 
@@ -5709,16 +6130,20 @@ class smart_map:
 
     def label_SVM_clicked(self, value):
 
-       if self.SVM == True:                
-           image = Image.open(os.path.join(self.path_absolute , '1_SVM_' + self.VTarget_FileName + '_Grid_Map.png'))
-           image.show()
+        if system != 'Darwin':  #PIL do not is install in MacOS  
+        
+            if self.SVM == True:                
+               image = Image.open(os.path.join(self.path_absolute , '1_SVM_' + self.VTarget_FileName + '_Grid_Map.png'))
+               image.show()
 
 
 
     def  pushButton_Validacao_Cruzada_SVM_clicked(self):                       #Validação Cruzada da SVM
 
 
-        if ((self.SVM_Add_Coord == False) or (self.SVM_Add_Feature == False)): #não adicionou features ao modelo 
+        '''
+        #if ((self.SVM_Add_Coord == False) or (self.SVM_Add_Feature == False)): #não adicionou features ao modelo 
+        if (self.SVM_Add_Coord == False): #não coordenadas ao modelo 
 
             #mensagem de retorno ao usuário 
             msg_box = QMessageBox()
@@ -5729,258 +6154,258 @@ class smart_map:
             msg_box.exec_()              
          
         else: 
+        '''
+        #set the max Kfold to 20 points in each fold
+        k_folds = round(len(self.data)/20) 
 
-            #set the max Kfold to 20 points in each fold
-            k_folds = round(len(self.data)/20) 
-    
-            if k_folds < 2: 
-               k_folds = 2  
-            elif k_folds > 5: 
-               k_folds = 5 
-
-
-            features = np.array(self.df_SVM_Trainfeatures, dtype=np.float)
-            
-            labels =   np.array(self.df_SVM_Trainlabels  , dtype=np.float)
-    
-
-            maximum = len(features) + (len(features) * 4) + 3
-            progress = QProgressDialog(self.tr('Validação Cruzada - SVM'), self.tr('Cancelar'),  1, maximum, self.dlg)
-            progress.setWindowTitle('Smart-Map')
-            progress.show() 
-            progress.setCancelButton(None)                                     #remove button cancel 
-            #progress.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, False)    #disable button 'X' 
-            progress.setWindowModality(QtCore.Qt.WindowModal)                  #modal for parent form 
-            #progress.setWindowModality(QtCore.Qt.ApplicationModal)            #modal for application 
-            time.sleep(0.1)
+        if k_folds < 2: 
+           k_folds = 2  
+        elif k_folds > 5: 
+           k_folds = 5 
 
 
-            ###################################################################
-            #otimização dos parametros do SVM
-    
-            
-            progress.setValue(1)                        
-            if progress.wasCanceled():                          
-               progress.close() 
-               return 
-    
-            self.norm = StandardScaler()   #objeto para normalizar as features e labels do SVM 
-    
-            #calculando C e gamma ótimo atraves do GridSearchCV                     
-            C_average, gamma_average  = functions.svr_param_selection(         self.norm, features, labels, k_folds)  #usa GridSearchCV     
-            #C_average, gamma_average = functions.svr_param_selection_optimize(self.norm, features, labels, k_folds)  #usa scikit-optimize 
+        features = np.array(self.df_SVM_Trainfeatures, dtype=np.float)
+        
+        labels =   np.array(self.df_SVM_Trainlabels  , dtype=np.float)
+
+
+        maximum = len(features) + (len(features) * 4) + 3
+        progress = QProgressDialog(self.tr('Validação Cruzada - SVM'), self.tr('Cancelar'),  1, maximum, self.dlg)
+        progress.setWindowTitle('Smart-Map')
+        progress.show() 
+        progress.setCancelButton(None)                                     #remove button cancel 
+        #progress.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, False)    #disable button 'X' 
+        progress.setWindowModality(QtCore.Qt.WindowModal)                  #modal for parent form 
+        #progress.setWindowModality(QtCore.Qt.ApplicationModal)            #modal for application 
+        time.sleep(0.1)
+
+
+        ###################################################################
+        #otimização dos parametros do SVM
 
         
-    
-            ###################################################################
-            #Treinamento do Modelo de Machine Learning 
+        progress.setValue(1)                        
+        if progress.wasCanceled():                          
+           progress.close() 
+           return 
 
-           
-            progress.setValue(2)                        
-            if progress.wasCanceled():                          
-               progress.close() 
-               return 
+        self.norm = StandardScaler()   #objeto para normalizar as features e labels do SVM 
 
-     
-            self.svr = svm.SVR(kernel = 'rbf', C = C_average, gamma = gamma_average)
+        #calculando C e gamma ótimo atraves do GridSearchCV                     
+        C_average, gamma_average  = functions.svr_param_selection(         self.norm, features, labels, k_folds)  #usa GridSearchCV     
+        #C_average, gamma_average = functions.svr_param_selection_optimize(self.norm, features, labels, k_folds)  #usa scikit-optimize 
 
-
-            ###################################################################
-            #Validação Cruzada  LOOCV
-    
-    
-            for cont in (range(len(features))):
-        
-                
-                train_features = np.copy(features)
-                train_labels = np.copy(labels)
-               
-                test_features = train_features[cont:cont+1,:]  #copia a linha cont da matriz  train_features(features) 
-                
-                train_features = np.delete(train_features, (cont), axis=0)     #deleta a linha cont da matriz - train_features         
-                train_labels = np.delete(train_labels, (cont), axis=0)         #deleta a linha cont da matriz - train_features         
-            
-            
-                self.norm  = self.norm.fit(train_features)
-                #self.norm = self.norm.fit(test_features)
-                
-                train_features = self.norm.transform(train_features)
-                              
-                test_features =  self.norm.transform(test_features)
-        
-                self.svr.fit(train_features, train_labels)
-                        
-                predictions = self.svr.predict(test_features) 
-        
-                if cont == 0:  #inicia a matriz de covariaveis p 
-                    labels_SVM_CV = np.copy(predictions) 
-                else:       
-                    labels_SVM_CV = np.vstack((labels_SVM_CV, predictions))    #concatena após ultima linha. 
-                
-
-                progress.setValue(cont+2)                        
-                if progress.wasCanceled():                          
-                   progress.close() 
-                   return 
-
-            
-            labels_SVM_CV = labels_SVM_CV.reshape(len(labels_SVM_CV))          #redimensiona o 2d-array em um 1d-array
-        
-            data_CV_SVM = np.column_stack((features[:, 0], features[:, 1], labels, labels_SVM_CV))    
     
 
-            self.df_CV_SVM = pd.DataFrame(np.atleast_2d(data_CV_SVM), columns=['Coord_X', 'Coord_Y', self.tr('Z.Obs.'), self.tr('Z.Predito')])
-            self.df_CV_SVM.to_csv(os.path.join(self.path_absolute , '1_SVM_' + self.VTarget_FileName + '_CV.csv'), sep=',', index = False, encoding='utf-8')
-    
-            
-            self.dlg.datatable_validacao_cruzada_SVM.setColumnCount(len(self.df_CV_SVM.columns))
-            self.dlg.datatable_validacao_cruzada_SVM.setRowCount(len(self.df_CV_SVM.index))
-            
-    
-            #preencher o cabeçalho
-            try:                       
-    
-                cols = [] 
-                cols = list(self.df_CV_SVM.columns.values)
-                
-                self.dlg.datatable_validacao_cruzada_SVM.setHorizontalHeaderLabels(cols)
-    
-            except AttributeError: 
-
-                #mensagem de retorno ao usuário 
-                msg_box = QMessageBox()
-                msg_box.setWindowIcon(QtGui.QIcon(self.icon_path))        
-                msg_box.setIcon(QMessageBox.Warning)
-                msg_box.setWindowTitle(self.tr('Mensagem'))
-                msg_box.setText(self.tr('Erro ao carregar tabela. Valor Inválido!'))
-                msg_box.exec_()
-                      
-            #preencher as linhas da planilha 
-            try:                       
-                        
-                for i in range(len(self.df_CV_SVM.index)):  #linhas 
-                    for j in range(len(self.df_CV_SVM.columns)):   #colunas 
-
-                        valor = self.df_CV_SVM.iloc[i,j]
-
-                        if valor.dtype == "float64": 
-                            valor = '%.3f' % valor                       
-                        
-                        valor = QTableWidgetItem(str(valor))                  
-                        self.dlg.datatable_validacao_cruzada_SVM.setItem(i,j, valor)
-
-                        cont = cont + 1 
-                        progress.setValue(cont+2)                        
-                        if progress.wasCanceled():                          
-                           progress.close() 
-                           return 
-                        
-                        
-            except AttributeError: 
-
-                #mensagem de retorno ao usuário 
-                msg_box = QMessageBox()
-                msg_box.setWindowIcon(QtGui.QIcon(self.icon_path))        
-                msg_box.setIcon(QMessageBox.Warning)
-                msg_box.setWindowTitle(self.tr('Mensagem'))
-                msg_box.setText(self.tr('Erro ao carregar tabela. Valor Inválido!'))
-                msg_box.exec_()
+        ###################################################################
+        #Treinamento do Modelo de Machine Learning 
 
        
-            self.dlg.datatable_validacao_cruzada_SVM.resizeColumnsToContents();
+        progress.setValue(2)                        
+        if progress.wasCanceled():                          
+           progress.close() 
+           return 
+
+ 
+        self.svr = svm.SVR(kernel = 'rbf', C = C_average, gamma = gamma_average)
+
+
+        ###################################################################
+        #Validação Cruzada  LOOCV
+
+
+        for cont in (range(len(features))):
     
-            self.dlg.datatable_validacao_cruzada_SVM.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers) #read-only para as celulas do datatable
+            
+            train_features = np.copy(features)
+            train_labels = np.copy(labels)
+           
+            test_features = train_features[cont:cont+1,:]  #copia a linha cont da matriz  train_features(features) 
+            
+            train_features = np.delete(train_features, (cont), axis=0)     #deleta a linha cont da matriz - train_features         
+            train_labels = np.delete(train_labels, (cont), axis=0)         #deleta a linha cont da matriz - train_features         
+        
+        
+            self.norm  = self.norm.fit(train_features)
+            #self.norm = self.norm.fit(test_features)
+            
+            train_features = self.norm.transform(train_features)
+                          
+            test_features =  self.norm.transform(test_features)
     
-            progress.setValue(cont+3)                        
+            self.svr.fit(train_features, train_labels)
+                    
+            predictions = self.svr.predict(test_features) 
+    
+            if cont == 0:  #inicia a matriz de covariaveis p 
+                labels_SVM_CV = np.copy(predictions) 
+            else:       
+                labels_SVM_CV = np.vstack((labels_SVM_CV, predictions))    #concatena após ultima linha. 
+            
+
+            progress.setValue(cont+2)                        
             if progress.wasCanceled():                          
                progress.close() 
                return 
 
-            
-            #plotar o gráfico da validação cruzada 
-                
-            #regression part  with sklearn.linear_model import LinearRegression
-            RMSE_lib, R2_RCV, regressor, R2_Elp, lccc = functions.calculate_statistics(labels_SVM_CV, labels)
+        
+        labels_SVM_CV = labels_SVM_CV.reshape(len(labels_SVM_CV))          #redimensiona o 2d-array em um 1d-array
+    
+        data_CV_SVM = np.column_stack((features[:, 0], features[:, 1], labels, labels_SVM_CV))    
 
-            #print('R2_Elp: ', R2_Elp)
-            #print('lccc: ', lccc)
 
+        self.df_CV_SVM = pd.DataFrame(np.atleast_2d(data_CV_SVM), columns=['Coord_X', 'Coord_Y', self.tr('Z.Obs.'), self.tr('Z.Predito')])
+        self.df_CV_SVM.to_csv(os.path.join(self.path_absolute , '1_SVM_' + self.VTarget_FileName + '_CV.csv'), sep=',', index = False, encoding='utf-8')
+
+        
+        self.dlg.datatable_validacao_cruzada_SVM.setColumnCount(len(self.df_CV_SVM.columns))
+        self.dlg.datatable_validacao_cruzada_SVM.setRowCount(len(self.df_CV_SVM.index))
+        
+
+        #preencher o cabeçalho
+        try:                       
+
+            cols = [] 
+            cols = list(self.df_CV_SVM.columns.values)
             
-            RMSE_lib = '%.3f' % (RMSE_lib)   
-            R2_RCV = '%.3f' % (R2_RCV) 
+            self.dlg.datatable_validacao_cruzada_SVM.setHorizontalHeaderLabels(cols)
+
+        except AttributeError: 
+
+            #mensagem de retorno ao usuário 
+            msg_box = QMessageBox()
+            msg_box.setWindowIcon(QtGui.QIcon(self.icon_path))        
+            msg_box.setIcon(QMessageBox.Warning)
+            msg_box.setWindowTitle(self.tr('Mensagem'))
+            msg_box.setText(self.tr('Erro ao carregar tabela. Valor Inválido!'))
+            msg_box.exec_()
+                  
+        #preencher as linhas da planilha 
+        try:                       
+                    
+            for i in range(len(self.df_CV_SVM.index)):  #linhas 
+                for j in range(len(self.df_CV_SVM.columns)):   #colunas 
+
+                    valor = self.df_CV_SVM.iloc[i,j]
+
+                    if valor.dtype == "float64": 
+                        valor = '%.3f' % valor                       
+                    
+                    valor = QTableWidgetItem(str(valor))                  
+                    self.dlg.datatable_validacao_cruzada_SVM.setItem(i,j, valor)
+
+                    cont = cont + 1 
+                    progress.setValue(cont+2)                        
+                    if progress.wasCanceled():                          
+                       progress.close() 
+                       return 
+                    
+                    
+        except AttributeError: 
+
+            #mensagem de retorno ao usuário 
+            msg_box = QMessageBox()
+            msg_box.setWindowIcon(QtGui.QIcon(self.icon_path))        
+            msg_box.setIcon(QMessageBox.Warning)
+            msg_box.setWindowTitle(self.tr('Mensagem'))
+            msg_box.setText(self.tr('Erro ao carregar tabela. Valor Inválido!'))
+            msg_box.exec_()
+
+   
+        self.dlg.datatable_validacao_cruzada_SVM.resizeColumnsToContents();
+
+        self.dlg.datatable_validacao_cruzada_SVM.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers) #read-only para as celulas do datatable
+
+        progress.setValue(cont+3)                        
+        if progress.wasCanceled():                          
+           progress.close() 
+           return 
+
+        
+        #plotar o gráfico da validação cruzada 
+            
+        #regression part  with sklearn.linear_model import LinearRegression
+        RMSE_lib, R2_RCV, regressor, R2_Elp, lccc = functions.calculate_statistics(labels_SVM_CV, labels)
+
+        #print('R2_Elp: ', R2_Elp)
+        #print('lccc: ', lccc)
+
+        
+        RMSE_lib = '%.3f' % (RMSE_lib)   
+        R2_RCV = '%.3f' % (R2_RCV) 
+             
+        
+        #To retrieve the intercept:
+        intercept = regressor.intercept_[0]
+
+        #For retrieving the slope:
+        slope = regressor.coef_[0][0]
+        
+        #To retrieve the residual da regressão:
+        #residual = regressor._residues
+
+       
+        #regression part with stats.linregress 
+        #from scipy import stats                                    
+        #slope, intercept, r_value, p_value, std_err = stats.linregress(labels_SVM_CV, labels.T)
+
+
+
+        #definir os limites do gráfico de validação cruzada 
+        x_min = min(labels_SVM_CV.min(), labels.min()) 
+        x_max = max(labels_SVM_CV.max(), labels.max()) 
+        
+        x_min = x_min - abs(intercept) 
+        if x_min < 0: 
+            x_min = 0
+
+        x_max = x_max + abs(intercept)
                  
-            
-            #To retrieve the intercept:
-            intercept = regressor.intercept_[0]
+        plt5.close()
+        plt5.title(self.tr('Validação Cruzada - SVM') + '   ' + self.tr('RMSE:') + ' ' + str(RMSE_lib) + '   $R^2$ : ' + str(R2_RCV))
 
-            #For retrieving the slope:
-            slope = regressor.coef_[0][0]
-            
-            #To retrieve the residual da regressão:
-            #residual = regressor._residues
+        plt5.xlim(x_min, x_max)
+        plt5.ylim(x_min, x_max)
 
-           
-            #regression part with stats.linregress 
-            #from scipy import stats                                    
-            #slope, intercept, r_value, p_value, std_err = stats.linregress(labels_SVM_CV, labels.T)
+        plt5.xlabel(self.tr('Valor Predito')  + ' - ' + self.v_target)
+        plt5.ylabel(self.tr('Valor Observado') + ' - ' + self.v_target) 
 
+        plt5.scatter(labels_SVM_CV, labels,     marker = 's'    , color = 'blue')
+        plt5.plot( [x_min,x_max],[x_min,x_max], linestyle = ':' , color = 'black')
 
-
-            #definir os limites do gráfico de validação cruzada 
-            x_min = min(labels_SVM_CV.min(), labels.min()) 
-            x_max = max(labels_SVM_CV.max(), labels.max()) 
-            
-            x_min = x_min - abs(intercept) 
-            if x_min < 0: 
-                x_min = 0
-
-            x_max = x_max + abs(intercept)
-                     
-            plt5.close()
-            plt5.title(self.tr('Validação Cruzada - SVM') + '   ' + self.tr('RMSE:') + ' ' + str(RMSE_lib) + '   $R^2$ : ' + str(R2_RCV))
-    
-            plt5.xlim(x_min, x_max)
-            plt5.ylim(x_min, x_max)
-    
-            plt5.xlabel(self.tr('Valor Predito')  + ' - ' + self.v_target)
-            plt5.ylabel(self.tr('Valor Observado') + ' - ' + self.v_target) 
-    
-            plt5.scatter(labels_SVM_CV, labels,     marker = 's'    , color = 'blue')
-            plt5.plot( [x_min,x_max],[x_min,x_max], linestyle = ':' , color = 'black')
-
-            labels_SVM_CV = np.append(0, labels_SVM_CV)       #insert 0 na posição 0 do array 
-            labels_SVM_CV = np.append(labels_SVM_CV, x_max)   #insert x_max na ultima posição do array 
-            
-            line = slope * labels_SVM_CV + intercept
-            
-            #plot Line of Regression                       
-            if intercept >= 0:                       
-                plt5.plot(labels_SVM_CV, line, color = 'black', label='y={:.3f}x+{:.3f}'.format(slope,intercept))
-            else: 
-                plt5.plot(labels_SVM_CV, line, color = 'black', label='y={:.3f}x-{:.3f}'.format(slope,abs(intercept)))
+        labels_SVM_CV = np.append(0, labels_SVM_CV)       #insert 0 na posição 0 do array 
+        labels_SVM_CV = np.append(labels_SVM_CV, x_max)   #insert x_max na ultima posição do array 
+        
+        line = slope * labels_SVM_CV + intercept
+        
+        #plot Line of Regression                       
+        if intercept >= 0:                       
+            plt5.plot(labels_SVM_CV, line, color = 'black', label='y={:.3f}x+{:.3f}'.format(slope,intercept))
+        else: 
+            plt5.plot(labels_SVM_CV, line, color = 'black', label='y={:.3f}x-{:.3f}'.format(slope,abs(intercept)))
 
 
-            plt5.legend(loc='upper left')       #posição da Lengenda                  
-            plt5.legend()
+        plt5.legend(loc='upper left')       #posição da Lengenda                  
+        plt5.legend()
 
-            plt5.ticklabel_format(style='plain', useOffset=False, axis='both') #não exibir coordenadas em notação cientifica 
+        plt5.ticklabel_format(style='plain', useOffset=False, axis='both') #não exibir coordenadas em notação cientifica 
 
-            #janela do plot exibir as coordenadas em notação decimal. 
-            ax = plt5.gca()
-            ax.format_coord = lambda x,y: '%10d, %10d' % (x,y)
+        #janela do plot exibir as coordenadas em notação decimal. 
+        ax = plt5.gca()
+        ax.format_coord = lambda x,y: '%10d, %10d' % (x,y)
 
-           
-            plt5.savefig(os.path.join(     self.path_absolute , '1_SVM_' + self.VTarget_FileName + '_CV.png'))
-            pixmap5 = QPixmap(os.path.join(self.path_absolute , '1_SVM_' + self.VTarget_FileName + '_CV.png'))
-            self.dlg.label_validacao_cruzada_SVM.show()
-            self.dlg.label_validacao_cruzada_SVM.setPixmap(pixmap5)
-            
-            if self.dlg.checkBox_Qgis_Maps.isChecked(): 
-                plt5.show()
        
-            progress.close() 
+        plt5.savefig(os.path.join(     self.path_absolute , '1_SVM_' + self.VTarget_FileName + '_CV.png'))
+        pixmap5 = QPixmap(os.path.join(self.path_absolute , '1_SVM_' + self.VTarget_FileName + '_CV.png'))
+        self.dlg.label_validacao_cruzada_SVM.show()
+        self.dlg.label_validacao_cruzada_SVM.setPixmap(pixmap5)
+        
+        if self.dlg.checkBox_Qgis_Maps.isChecked(): 
+            plt5.show()
+   
+        progress.close() 
 
-            self.Validacao_Cruzada_SVM  = True 
+        self.Validacao_Cruzada_SVM  = True 
 
 
     def datatable_validacao_cruzada_SVM_doubleClicked(self):  
@@ -5991,9 +6416,12 @@ class smart_map:
 
     def label_validacao_cruzada_SVM_clicked(self, value):
 
-       if self.Validacao_Cruzada_SVM == True:                
-           image = Image.open(os.path.join(self.path_absolute , '1_SVM_' + self.VTarget_FileName + '_CV.png'))
-           image.show()
+
+        if system != 'Darwin':  #PIL do not is install in MacOS  
+        
+            if self.Validacao_Cruzada_SVM == True:                
+               image = Image.open(os.path.join(self.path_absolute , '1_SVM_' + self.VTarget_FileName + '_CV.png'))
+               image.show()
 
   
             
@@ -6199,7 +6627,7 @@ class smart_map:
        
         self.list_cov_ZM        = []   
         self.list_cov_ZM_metodo = []   
-        self.atributos_ZM = ''               
+        #self.atributos_ZM = ''               
 
         
         self.df_ZM_Coord = pd.read_csv(filename, sep = ',')
@@ -6313,7 +6741,7 @@ class smart_map:
                 self.df_ZM_Var = self.df_ZM_Var.fillna(self.df.mean())         #preeenche com o valor da média da feature 
 
 
-            self.df_ZM_Var.to_csv(os.path.join(self.path_absolute , '2_ZM_' + self.atributos_ZM + '_Vars.csv'), sep=',', index = False, encoding='utf-8')
+            self.df_ZM_Var.to_csv(os.path.join(self.path_absolute , '2_ZM_' + self.VTarget_FileName + '_Vars.csv'), sep=',', index = False, encoding='utf-8')
 
    
             cols = [] 
@@ -6483,7 +6911,7 @@ class smart_map:
                 #self.df_ZM_Var.drop(self.df_ZM_Var.columns[[id_col]], axis=1, inplace=True) #se existir variavel repetida apaga as repetições e não apenas o índice da coluna  
                 self.df_ZM_Var = self.df_ZM_Var.iloc[:, list_cov_ZM_Index]
     
-                self.df_ZM_Var.to_csv(os.path.join(self.path_absolute , '2_ZM_' + self.atributos_ZM + '_Vars.csv'), sep=',', index = False, encoding='utf-8')
+                self.df_ZM_Var.to_csv(os.path.join(self.path_absolute , '2_ZM_' + self.VTarget_FileName + '_Vars.csv'), sep=',', index = False, encoding='utf-8')
 
     
                 self.dlg.comboBox_ZM_var.removeItem(id_col)     
@@ -6545,7 +6973,7 @@ class smart_map:
 
     def datatable_ZM_doubleClicked(self):  
 
-        os.startfile(os.path.join(self.path_absolute , '2_ZM_' + self.atributos_ZM + '_Vars.csv'))
+        os.startfile(os.path.join(self.path_absolute , '2_ZM_' + self.VTarget_FileName + '_Vars.csv'))
 
 
 
@@ -6589,7 +7017,16 @@ class smart_map:
             # tol define a tolerância
             tol=1.0E-5
 
-            self.df_ZM = pd.concat([self.df_ZM_Coord, self.df_ZM_Var], axis=1) 
+            #self.df_ZM = pd.concat([self.df_ZM_Coord, self.df_ZM_Var], axis=1) 
+            self.df_ZM = pd.concat([self.df_ZM_Var], axis=1) 
+
+            tot_nan = self.df_ZM.isnull().sum().sum()
+                
+            if tot_nan > 0: 
+                
+                self.df_ZM.dropna(inplace=True)                                            #drop lines with null values  
+                self.df_ZM.reset_index(drop = True, inplace=True)                          #reset the index without create new colum index
+
 
             # vamos definir o banco de dados            
             X = np.copy(self.df_ZM)  #X[7860,5]  7860 linhas por 5 colunas (coordx, coordy, +3 atributos)
@@ -6761,9 +7198,12 @@ class smart_map:
 
     def label_ZM_FPI_NCE_clicked(self, value):
 
-       if  self.Calc_Nr_Ideal_ZM == True:                
-           image = Image.open(os.path.join(self.path_absolute , '2_ZM_' + self.VTarget_FileName + '_FPI_NCE.png'))
-           image.show()
+        if system != 'Darwin':  #PIL do not is install in MacOS  
+ 
+            
+            if  self.Calc_Nr_Ideal_ZM == True:                
+               image = Image.open(os.path.join(self.path_absolute , '2_ZM_' + self.VTarget_FileName + '_FPI_NCE.png'))
+               image.show()
 
 
 
@@ -6791,8 +7231,19 @@ class smart_map:
 
 
            
-            self.atributos_ZM = ''
+            #self.atributos_ZM = ''
+
+            self.df_ZM = pd.concat([self.df_ZM_Coord, self.df_ZM_Var], axis=1) 
+
+            tot_nan = self.df_ZM.isnull().sum().sum()
+                
+            if tot_nan > 0: 
+                
+                self.df_ZM.dropna(inplace=True)                                            #drop lines with null values  
+                self.df_ZM.reset_index(drop = True, inplace=True)                          #reset the index without create new colum index
+
             
+            '''
             for i in range(len(self.list_cov_ZM_metodo)):  
     
                 if 'SVM' in self.list_cov_ZM_metodo[i]: 
@@ -6807,9 +7258,9 @@ class smart_map:
 
                         self.atributos_ZM = self.atributos_ZM + 'Krig_'              
                     
-
-            self.df_ZM = pd.concat([self.df_ZM_Coord, self.df_ZM_Var], axis=1) 
-                   
+            '''
+            
+            
             data = np.array(self.df_ZM, dtype=np.float)
 
             X = np.copy(data[:, [0, 1]])   #pega todos os dados da matriz coluna 0 (Coord_X) e coluna 1 (Coord_Y)
@@ -6818,52 +7269,52 @@ class smart_map:
             if len(self.df_ZM.columns) == 3:                                   #só possui um atributo 
                z = np.copy(data[:, [2]])                                       #pega todos os dados da matriz coluna 2 
                alldata = np.vstack((z[:,0], z[:,0]))                           #repete a coluna para ficar um vetor 2D 
-               self.atributos_ZM = self.atributos_ZM + self.df_ZM.columns[2]
+               #self.atributos_ZM = self.atributos_ZM + self.df_ZM.columns[2]
              
             elif len(self.df_ZM.columns) == 4:                                 #possui dois atributo  
                z = np.copy(data[:, [2,3]])                                     #pega todos os dados da matriz coluna 2 e 3
                alldata = np.vstack((z[:,0], z[:,1]))   
-               self.atributos_ZM = self.atributos_ZM + self.df_ZM.columns[2] + '_' + self.df_ZM.columns[3]               
+               #self.atributos_ZM = self.atributos_ZM + self.df_ZM.columns[2] + '_' + self.df_ZM.columns[3]               
             
             elif len(self.df_ZM.columns) == 5:                                 #possui tres atributos 
                z = np.copy(data[:, [2,3,4]])                                   #pega todos os dados da matriz coluna 2, 3, 4
                alldata = np.vstack((z[:,0], z[:,1], z[:,2]))   
-               self.atributos_ZM = self.atributos_ZM + self.df_ZM.columns[2] + '_' + self.df_ZM.columns[3] + '_' + self.df_ZM.columns[4]              
+               #self.atributos_ZM = self.atributos_ZM + self.df_ZM.columns[2] + '_' + self.df_ZM.columns[3] + '_' + self.df_ZM.columns[4]              
              
             elif len(self.df_ZM.columns) == 6:                                 #possui 4 atributos 
                z = np.copy(data[:, [2,3,4,5]])                                 #pega todos os dados da matriz coluna 2, 3, 4, 5
                alldata = np.vstack((z[:,0], z[:,1], z[:,2], z[:,3]))            
-               self.atributos_ZM = self.atributos_ZM + self.df_ZM.columns[2] + '_' + self.df_ZM.columns[3] + '_' + self.df_ZM.columns[4] + '_' + self.df_ZM.columns[5]                           
+               #self.atributos_ZM = self.atributos_ZM + self.df_ZM.columns[2] + '_' + self.df_ZM.columns[3] + '_' + self.df_ZM.columns[4] + '_' + self.df_ZM.columns[5]                           
              
             elif len(self.df_ZM.columns) == 7:                                 #possui 5 atributos 
                z = np.copy(data[:, [2,3,4,5,6]])                               #pega todos os dados da matriz coluna 2, 3, 4, 5, 6
                alldata = np.vstack((z[:,0], z[:,1], z[:,2], z[:,3], z[:,4]))            
-               self.atributos_ZM = self.atributos_ZM + self.df_ZM.columns[2] + '_' + self.df_ZM.columns[3] + '_' + self.df_ZM.columns[4] + '_' + self.df_ZM.columns[5] + '_' + self.df_ZM.columns[6]              
+               #self.atributos_ZM = self.atributos_ZM + self.df_ZM.columns[2] + '_' + self.df_ZM.columns[3] + '_' + self.df_ZM.columns[4] + '_' + self.df_ZM.columns[5] + '_' + self.df_ZM.columns[6]              
              
             elif len(self.df_ZM.columns) == 8:                                 #possui 6 atributos 
                z = np.copy(data[:, [2,3,4,5,6,7]])                             #pega todos os dados da matriz coluna 2, 3, 4, 5, 6, 7
                alldata = np.vstack((z[:,0], z[:,1], z[:,2], z[:,3], z[:,4], z[:,5]))            
-               self.atributos_ZM = self.atributos_ZM + self.df_ZM.columns[2] + '_' + self.df_ZM.columns[3] + '_' + self.df_ZM.columns[4] + '_' + self.df_ZM.columns[5] + '_' + self.df_ZM.columns[6] + '_' + self.df_ZM.columns[7]              
+               #self.atributos_ZM = self.atributos_ZM + self.df_ZM.columns[2] + '_' + self.df_ZM.columns[3] + '_' + self.df_ZM.columns[4] + '_' + self.df_ZM.columns[5] + '_' + self.df_ZM.columns[6] + '_' + self.df_ZM.columns[7]              
               
             elif len(self.df_ZM.columns) == 9:                                 #possui 7 atributos 
                z = np.copy(data[:, [2,3,4,5,6,7,8]])                           #pega todos os dados da matriz coluna 2, 3, 4, 5, 6, 7, 8
                alldata = np.vstack((z[:,0], z[:,1], z[:,2], z[:,3], z[:,4], z[:,5], z[:,6]))            
-               self.atributos_ZM = self.atributos_ZM + self.df_ZM.columns[2] + '_' + self.df_ZM.columns[3] + '_' + self.df_ZM.columns[4] + '_' + self.df_ZM.columns[5] + '_' + self.df_ZM.columns[6] + '_' + self.df_ZM.columns[7] + '_' + self.df_ZM.columns[8]              
+               #self.atributos_ZM = self.atributos_ZM + self.df_ZM.columns[2] + '_' + self.df_ZM.columns[3] + '_' + self.df_ZM.columns[4] + '_' + self.df_ZM.columns[5] + '_' + self.df_ZM.columns[6] + '_' + self.df_ZM.columns[7] + '_' + self.df_ZM.columns[8]              
               
             elif len(self.df_ZM.columns) == 10:                                #possui 8 atributos 
                z = np.copy(data[:, [2,3,4,5,6,7,8,9]])                         #pega todos os dados da matriz coluna 2, 3, 4, 5, 6, 7, 8, 9
                alldata = np.vstack((z[:,0], z[:,1], z[:,2], z[:,3], z[:,4], z[:,5], z[:,6], z[:,7]))            
-               self.atributos_ZM = self.atributos_ZM + self.df_ZM.columns[2] + '_' + self.df_ZM.columns[3] + '_' + self.df_ZM.columns[4] + '_' + self.df_ZM.columns[5] + '_' + self.df_ZM.columns[6] + '_' + self.df_ZM.columns[7] + '_' + self.df_ZM.columns[8] + '_' + self.df_ZM.columns[9]             
+               #self.atributos_ZM = self.atributos_ZM + self.df_ZM.columns[2] + '_' + self.df_ZM.columns[3] + '_' + self.df_ZM.columns[4] + '_' + self.df_ZM.columns[5] + '_' + self.df_ZM.columns[6] + '_' + self.df_ZM.columns[7] + '_' + self.df_ZM.columns[8] + '_' + self.df_ZM.columns[9]             
                
             elif len(self.df_ZM.columns) == 11:                                #possui 9 atributos 
                z = np.copy(data[:, [2,3,4,5,6,7,8,9,10]])                      #pega todos os dados da matriz coluna 2, 3, 4, 5, 6, 7, 8, 10
                alldata = np.vstack((z[:,0], z[:,1], z[:,2], z[:,3], z[:,4], z[:,5], z[:,6], z[:,7], z[:,8]))            
-               self.atributos_ZM = self.atributos_ZM + self.df_ZM.columns[2] + '_' + self.df_ZM.columns[3] + '_' + self.df_ZM.columns[4] + '_' + self.df_ZM.columns[5] + '_' + self.df_ZM.columns[6] + '_' + self.df_ZM.columns[7] + '_' + self.df_ZM.columns[8] + '_' + self.df_ZM.columns[9] + '_' + self.df_ZM.columns[10]             
+               #self.atributos_ZM = self.atributos_ZM + self.df_ZM.columns[2] + '_' + self.df_ZM.columns[3] + '_' + self.df_ZM.columns[4] + '_' + self.df_ZM.columns[5] + '_' + self.df_ZM.columns[6] + '_' + self.df_ZM.columns[7] + '_' + self.df_ZM.columns[8] + '_' + self.df_ZM.columns[9] + '_' + self.df_ZM.columns[10]             
                
             elif len(self.df_ZM.columns) == 12:                                #possui 10 atributos 
                z = np.copy(data[:, [2,3,4,5,6,7,8,9,10,11]])                   #pega todos os dados da matriz coluna 2, 3, 4, 5, 6, 7, 8, 10, 11 
                alldata = np.vstack((z[:,0], z[:,1], z[:,2], z[:,3], z[:,4], z[:,5], z[:,6], z[:,7], z[:,8], z[:,9]))            
-               self.atributos_ZM = self.atributos_ZM + self.df_ZM.columns[2] + '_' + self.df_ZM.columns[3] + '_' + self.df_ZM.columns[4] + '_' + self.df_ZM.columns[5] + '_' + self.df_ZM.columns[6] + '_' + self.df_ZM.columns[7] + '_' + self.df_ZM.columns[8] + '_' + self.df_ZM.columns[9] + '_' + self.df_ZM.columns[10] + '_' + self.df_ZM.columns[11]
+               #self.atributos_ZM = self.atributos_ZM + self.df_ZM.columns[2] + '_' + self.df_ZM.columns[3] + '_' + self.df_ZM.columns[4] + '_' + self.df_ZM.columns[5] + '_' + self.df_ZM.columns[6] + '_' + self.df_ZM.columns[7] + '_' + self.df_ZM.columns[8] + '_' + self.df_ZM.columns[9] + '_' + self.df_ZM.columns[10] + '_' + self.df_ZM.columns[11]
                
             else: 
                 #mensagem de retorno ao usuário 
@@ -6875,15 +7326,15 @@ class smart_map:
                 msg_box.exec_()               
                 
 
-            
+            '''
             for ch in [' ', ')', '(', 'á', '?', '/', 'é', '.', 'í', 'ú', '-']:
                 if ch in self.atributos_ZM:
                     self.atributos_ZM = self.atributos_ZM.replace(ch,"_")
-
+            '''
      
-            #if self.dlg.checkBox_ZM_Normalizar.isChecked():  
-            alldata = scale(alldata, axis=1, with_mean=True, with_std=True, copy=True)       #padroniza os dados por linha (axis=1)
-                                                                                             #alldata [3, 7860] = 3 atributos, 7860 amostras
+            if self.dlg.checkBox_ZM_Normalizar.isChecked():  
+                alldata = scale(alldata, axis=1, with_mean=True, with_std=True, copy=True)       #padroniza os dados por linha (axis=1)
+                                                                                                 #alldata [3, 7860] = 3 atributos, 7860 amostras
             
             #cntr, u_orig, _, _, _, _, fpi = fuzz.cluster.cmeans(alldata, c=num_zones, m=coef_nebuloso, error=tol, maxiter=num_iteration)  #(when import all library)
             cntr, u_orig, _, _, _, _, fpi = _cmeans.cmeans(alldata, c=num_zones, m=coef_nebuloso, error=tol, maxiter=num_iteration)
@@ -6909,7 +7360,7 @@ class smart_map:
             #cria uma coluna a partir do índice do dataframe
             #id_index = df_ZM_Classe.index.values
             #df_ZM_Classe.insert( 0, column="ID",value = id_index+1)
-            df_ZM_Classe.to_csv(os.path.join(self.path_absolute , '2_ZM_' + self.atributos_ZM + '_Class.csv'), sep=',', index = False, encoding='utf-8')
+            df_ZM_Classe.to_csv(os.path.join(self.path_absolute , '2_ZM_' + self.VTarget_FileName + '_Class.csv'), sep=',', index = False, encoding='utf-8')
 
 
             maximum = ( len(df_ZM_Classe.index) * len(df_ZM_Classe.columns) ) 
@@ -7027,6 +7478,175 @@ class smart_map:
                 self.dlg.lineEdit_ZM_NCE.setText(str(self.nce))  
 
 
+            #gerar matriz de pertinencia. (arquivo que contem a coordenada X, Y, e os valores de todos os pontos das classes)    X, Y, Classe1, Classe2, Classe3, ......              
+            lista = []
+
+
+            for i in range(len(u_orig)):
+
+                if num_zones   == 1:                                   # possui 1 atributo 
+                  lista.append([X[i,0], X[i,1], u_orig[i,0]])            
+                  classes = ['1']
+                elif num_zones == 2:                                   # possui 2 atributo  
+                  lista.append([X[i,0], X[i,1], u_orig[i,0], u_orig[i,1]])            
+                  classes = ['1', '2']
+                elif num_zones == 3:                                  # possui 3 atributos 
+                  lista.append([X[i,0], X[i,1], u_orig[i,0], u_orig[i,1], u_orig[i,2]])            
+                  classes = ['1', '2', '3']
+                elif num_zones == 4:                                  # possui 4 atributos 
+                  lista.append([X[i,0], X[i,1], u_orig[i,0], u_orig[i,1], u_orig[i,2], u_orig[i,3]])            
+                  classes = ['1', '2', '3', '4']
+                elif num_zones == 5:                                  # possui 5 atributos 
+                  lista.append([X[i,0], X[i,1], u_orig[i,0], u_orig[i,1], u_orig[i,2], u_orig[i,3], u_orig[i,4]])            
+                  classes = ['1', '2', '3', '4', '5']
+                elif num_zones == 6:                                  # possui 6 atributos 
+                  lista.append([X[i,0], X[i,1], u_orig[i,0], u_orig[i,1], u_orig[i,2], u_orig[i,3], u_orig[i,4], u_orig[i,5]])
+                  classes = ['1', '2', '3', '4', '5', '6']
+                elif num_zones == 7:                                  # possui 7 atributos 
+                  lista.append([X[i,0], X[i,1], u_orig[i,0], u_orig[i,1], u_orig[i,2], u_orig[i,3], u_orig[i,4], u_orig[i,5], u_orig[i,6]])
+                  classes = ['1', '2', '3', '4', '5', '6', '7']
+                elif num_zones == 8:                                  # possui 8 atributos 
+                  lista.append([X[i,0], X[i,1], u_orig[i,0], u_orig[i,1], u_orig[i,2], u_orig[i,3], u_orig[i,4], u_orig[i,5], u_orig[i,6], u_orig[i,7]])
+                  classes = ['1', '2', '3', '4', '5', '6', '7', '8']
+                elif num_zones == 9:                                  # possui 9 atributos 
+                  lista.append([X[i,0], X[i,1], u_orig[i,0], u_orig[i,1], u_orig[i,2], u_orig[i,3], u_orig[i,4], u_orig[i,5], u_orig[i,6], u_orig[i,7], u_orig[i,8]])
+                  classes = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+                elif num_zones == 10:                                  # possui 10 atributos 
+                  lista.append([X[i,0], X[i,1], u_orig[i,0], u_orig[i,1], u_orig[i,2], u_orig[i,3], u_orig[i,4], u_orig[i,5], u_orig[i,6], u_orig[i,7], u_orig[i,8], u_orig[i,9]])
+                  classes = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+                else: 
+                    #mensagem de retorno ao usuário 
+                    msg_box = QMessageBox()
+                    msg_box.setIcon(QMessageBox.Warning)
+                    msg_box.setWindowTitle(self.tr('Mensagem'))
+                    msg_box.setText(self.tr('Número Máximo de classes excedido.'))
+                    msg_box.exec_()               
+
+
+            self.Cord_X   =  'CoordX_SM' #self.dlg.comboBox_CordX.currentText()  
+            self.Cord_Y   =  'CoordY_SM' #self.dlg.comboBox_CordY.currentText() 
+
+            if num_zones   == 1:                                  #só possui 1 atributo 
+              lista = np.array(lista)  
+              df_MP = pd.DataFrame(np.atleast_2d(lista), columns=[self.Cord_X, self.Cord_Y, 'Cls1'])
+              
+            elif num_zones == 2:                                   # possui 2 atributo  
+              lista = np.array(lista)             
+              df_MP = pd.DataFrame(np.atleast_2d(lista), columns=[self.Cord_X, self.Cord_Y, 'Cls1', 'Cls2'])
+
+            elif num_zones == 3:                                  # possui 3 atributos 
+              lista = np.array(lista)             
+              df_MP = pd.DataFrame(np.atleast_2d(lista), columns=[self.Cord_X, self.Cord_Y, 'Cls1', 'Cls2', 'Cls3'])
+
+            elif num_zones == 4:                                  # possui 4 atributos 
+              lista = np.array(lista)             
+              df_MP = pd.DataFrame(np.atleast_2d(lista), columns=[self.Cord_X, self.Cord_Y, 'Cls1', 'Cls2', 'Cls3', 'Cls4'])
+
+            elif num_zones == 5:                                  # possui 5 atributos 
+              lista = np.array(lista)             
+              df_MP = pd.DataFrame(np.atleast_2d(lista), columns=[self.Cord_X, self.Cord_Y, 'Cls1', 'Cls2', 'Cls3', 'Cls4', 'Cls5'])
+
+            elif num_zones == 6:                                  # possui 6 atributos 
+              lista = np.array(lista)             
+              df_MP = pd.DataFrame(np.atleast_2d(lista), columns=[self.Cord_X, self.Cord_Y, 'Cls1', 'Cls2', 'Cls3', 'Cls4', 'Cls5', 'Cls6'])
+
+            elif num_zones == 7:                                  # possui 7 atributos 
+              lista = np.array(lista)             
+              df_MP = pd.DataFrame(np.atleast_2d(lista), columns=[self.Cord_X, self.Cord_Y, 'Cls1', 'Cls2', 'Cls3', 'Cls4', 'Cls5', 'Cls6', 'Cls7'])
+
+            elif num_zones == 8:                                  # possui 8 atributos 
+              lista = np.array(lista)             
+              df_MP = pd.DataFrame(np.atleast_2d(lista), columns=[self.Cord_X, self.Cord_Y, 'Cls1', 'Cls2', 'Cls3', 'Cls4', 'Cls5', 'Cls6', 'Cls7', 'Cls8'])
+
+            elif num_zones == 9:                                  # possui 9 atributos 
+              lista = np.array(lista)             
+              df_MP = pd.DataFrame(np.atleast_2d(lista), columns=[self.Cord_X, self.Cord_Y, 'Cls1', 'Cls2', 'Cls3', 'Cls4', 'Cls5', 'Cls6', 'Cls7', 'Cls8', 'Cls9'])
+
+            elif num_zones == 10:                                 # possui 10 atributos 
+              lista = np.array(lista)             
+              df_MP = pd.DataFrame(np.atleast_2d(lista), columns=[self.Cord_X, self.Cord_Y, 'Cls1', 'Cls2', 'Cls3', 'Cls4', 'Cls5', 'Cls6', 'Cls7', 'Cls8', 'Cls9', 'Cls10'])
+
+            else: 
+                #mensagem de retorno ao usuário 
+                msg_box = QMessageBox()
+                msg_box.setIcon(QMessageBox.Warning)
+                msg_box.setWindowTitle(self.tr('Mensagem'))
+                msg_box.setText(self.tr('Número Máximo de classes excedido.'))
+                msg_box.exec_()               
+
+             
+
+            #cria uma coluna a partir do índice do dataframe
+            #id_index = df_MP.index.values
+            #df_MP.insert( 0, column="ID",value = id_index+1)
+            df_MP.to_csv(os.path.join(self.path_absolute , '2_ZM' + '_' + self.VTarget_FileName + '_MP.csv'), sep=',', index = False, encoding='utf-8')
+
+
+            '''
+            #Carregar Matriz de pertinência 
+            self.dlg.label_etapa_ZM.setText(self.tr('Gerando Matriz de Pertinência.') + '...')  
+            self.dlg.progressBar_ZM.setMinimum(1)     
+            self.dlg.progressBar_ZM.setMaximum( len(df_MP.index) * len(df_MP.columns) )
+
+
+            self.dlg.datatable_MP.setColumnCount(len(df_MP.columns))
+            self.dlg.datatable_MP.setRowCount(len(df_MP.index))
+        
+            #preencher o cabeçalho
+            try:                       
+                cols = [] 
+                cols = list(df_MP.columns.values)
+            
+                self.dlg.datatable_MP.setHorizontalHeaderLabels(cols)
+
+            except AttributeError: 
+
+                #mensagem de retorno ao usuário 
+                msg_box = QMessageBox()
+                msg_box.setIcon(QMessageBox.Warning)
+                msg_box.setWindowTitle(self.tr('Mensagem'))
+                msg_box.setText(self.tr('Erro ao carregar tabela. Valor Inválido!'))
+                msg_box.exec_()
+                
+                
+            #preencher as linhas da planilha 
+            cont = 1     
+            try:                       
+                for i in range(len(df_MP.index)):         #linhas 
+                    for j in range(len(df_MP.columns)):   #colunas 
+                        valor = df_MP.iloc[i,j]
+
+                        if valor.dtype == "float64": 
+                            valor = '%.3f' % valor                       
+                    
+                        valor = QTableWidgetItem(str(valor))                  
+                        self.dlg.datatable_MP.setItem(i,j, valor)
+                        cont = cont + 1 
+                        self.dlg.progressBar_ZM.setValue(cont)   
+
+            except AttributeError: 
+
+                #mensagem de retorno ao usuário 
+                msg_box = QMessageBox()
+                msg_box.setIcon(QMessageBox.Warning)
+                msg_box.setWindowTitle(self.tr('Mensagem'))
+                msg_box.setText(self.tr('Erro ao carregar tabela. Valor Inválido!'))
+                msg_box.exec_()
+
+   
+            #self.dlg.datatable_MP.removeColumn(0)  #remove coluna ID da interface do usuário             
+
+            self.dlg.datatable_MP.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers) #read-only para as celulas do datatable
+
+        
+                       
+            self.dlg.tabWidget_ZM.setCurrentIndex(2)          
+            '''
+
+
+            self.df_ZM.to_csv(os.path.join(self.path_absolute , '2_ZM' + '_' + self.VTarget_FileName + '_Vars.csv'), sep=',', index = False, encoding='utf-8')
+
+
 
 
             Cord_X_min_ZM = self.df_ZM['CoordX_SM'].min() 
@@ -7035,20 +7655,41 @@ class smart_map:
             Cord_Y_max_ZM = self.df_ZM['CoordY_SM'].max() 
 
 
+            if ((self.Var_Selected == False) and (self.Contorno_Definido == False)):           #Not selected Variable V_target   #Not selected Map Contourn 
+            
+                self.Cord_X_min = Cord_X_min_ZM 
+                self.Cord_Y_min = Cord_Y_min_ZM 
+                self.Cord_X_max = Cord_X_max_ZM 
+                self.Cord_Y_max = Cord_Y_max_ZM  
+
+
             plt7.close()
             
-            plt7.title(self.tr('ZM') + ': ' + self.atributos_ZM + '   FPI: ' + str(self.fpi) + '   NCE: ' + str(self.nce))                               
+            plt7.title(self.tr('ZM') + ': ' + self.v_target + '   FPI: ' + str(self.fpi) + '   NCE: ' + str(self.nce))                               
             plt7.xlabel('Longitude (X)')
             plt7.ylabel('Latitude  (Y)') 
 
             plt7.xlim(float(Cord_X_min_ZM-100), float(Cord_X_max_ZM+100))
             plt7.ylim(float(Cord_Y_min_ZM-100), float(Cord_Y_max_ZM+100))        
 
-            xmarks=[i for i in range(int(Cord_X_min_ZM),int(Cord_X_max_ZM) , int((Cord_X_max_ZM - Cord_X_min_ZM)/5))]          
+
+            interval_x = int((self.Cord_X_max-self.Cord_X_min)/5)
+            
+            if interval_x == 0:
+                interval_x = 1 #int((self.Cord_X_max-self.Cord_X_min))
+
+            xmarks=[i for i in range(int(Cord_X_min_ZM),int(Cord_X_max_ZM) , interval_x)]          
             plt7.xticks(xmarks)
     
-            ymarks=[i for i in range(int(Cord_Y_min_ZM),int(Cord_Y_max_ZM) , int((Cord_Y_max_ZM - Cord_Y_min_ZM)/7))]          
+
+            interval_y = int((Cord_Y_max_ZM - Cord_Y_min_ZM)/7)
+            
+            if interval_y == 0:
+                interval_y = 1 #int((self.Cord_X_max-self.Cord_X_min))
+
+            ymarks=[i for i in range(int(Cord_Y_min_ZM),int(Cord_Y_max_ZM) , interval_y)]          
             plt7.yticks(ymarks)
+
             
             classes = np.arange(1,num_zones+1)
             classes_string  = [str(i) for i in classes]
@@ -7063,8 +7704,8 @@ class smart_map:
             ax = plt7.gca()
             ax.format_coord = lambda x,y: '%10d, %10d' % (x,y)
             
-            plt7.savefig(     os.path.join(self.path_absolute , '2_ZM_' + self.atributos_ZM + '_Class.png'))
-            pixmap7 = QPixmap(os.path.join(self.path_absolute , '2_ZM_' + self.atributos_ZM + '_Class.png'))
+            plt7.savefig(     os.path.join(self.path_absolute , '2_ZM_' + self.VTarget_FileName + '_Class.png'))
+            pixmap7 = QPixmap(os.path.join(self.path_absolute , '2_ZM_' + self.VTarget_FileName + '_Class.png'))
             self.dlg.label_ZM.show()
             self.dlg.label_ZM.setPixmap(pixmap7)
 
@@ -7081,21 +7722,22 @@ class smart_map:
                 self.dlg.mMapLayerComboBox.currentIndexChanged.disconnect()                                 #disconnecta evento do combobox select Layer Qgis na tabela de atributos 
                 
 
-                Input_Table            = os.path.join(self.path_absolute , '2_ZM_' + self.atributos_ZM + '_Class.csv')   #set the filepath for the input CSV
-                Output_Layer_File_shp  = os.path.join(self.path_absolute , '2_ZM_' + self.atributos_ZM + '_Class.shp')   #set the filepath for the output shapefile
-                Output_Layer_Name      =                                   '2_ZM_' + self.atributos_ZM
+                Input_Table            = os.path.join(self.path_absolute , '2_ZM_' + self.VTarget_FileName + '_Class.csv')   #set the filepath for the input CSV
+                Output_Layer_File_shp  = os.path.join(self.path_absolute , '2_ZM_' + self.VTarget_FileName + '_Class.shp')   #set the filepath for the output shapefile
+                Output_Layer_Name      =                                   '2_ZM_' + self.VTarget_FileName
 
-                self.export_shapefile_to_qgis(Input_Table, Output_Layer_File_shp, Output_Layer_Name) 
-                    
+                self.export_shapefile_of_points_to_qgis(Input_Table, Output_Layer_File_shp, Output_Layer_Name)                   
+                #self.export_shapefile_of_polygons_to_qgis(Input_Table, Output_Layer_File_shp, Output_Layer_Name) 
+
                 self.dlg.mMapLayerComboBox.currentIndexChanged.connect(self.mMapLayerComboBox_changed)      #connecta evento do combobox select Layer Qgis na tabela de atributos 
 
                 
             if self.dlg.checkBox_Qgis_Raster.isChecked(): 
  
 
-                Input_Table            =                                   '2_ZM_' + self.atributos_ZM + '_Class.csv'
-                Output_Layer_File_tiff = os.path.join(self.path_absolute , '2_ZM_' + self.atributos_ZM + '_Class.tiff')
-                Output_Layer_Name      =                                   '2_ZM_' + self.atributos_ZM
+                Input_Table            =                                   '2_ZM_' + self.VTarget_FileName + '_Class.csv'
+                Output_Layer_File_tiff = os.path.join(self.path_absolute , '2_ZM_' + self.VTarget_FileName + '_Class.tiff')
+                Output_Layer_Name      =                                   '2_ZM_' + self.VTarget_FileName
                 z_field   = 'Classe'
 
                 self.dlg.mMapLayerComboBox.currentIndexChanged.disconnect()
@@ -7112,21 +7754,23 @@ class smart_map:
             
     def datatable_ZM_Classe_doubleClicked(self):  
 
-        os.startfile(os.path.join(self.path_absolute , '2_ZM_' + self.atributos_ZM + '_Class.csv'))
+        os.startfile(os.path.join(self.path_absolute , '2_ZM_' + self.VTarget_FileName + '_Class.csv'))
 
             
             
     def label_ZM_clicked(self, value):
 
-       if  self.ZM_Calcular == True:                
-           image = Image.open(os.path.join(self.path_absolute , '2_ZM_' + self.atributos_ZM + '_Class.png'))
-           image.show()   
+        if system != 'Darwin':  #PIL do not is install in MacOS  
+        
+            if  self.ZM_Calcular == True:                
+               image = Image.open(os.path.join(self.path_absolute , '2_ZM_' + self.VTarget_FileName + '_Class.png'))
+               image.show()   
         
 
     #############################################################################################################################
 
 
-    def export_shapefile_to_qgis(self, Input_Table, Output_Layer_File_shp, Output_Layer_Name):
+    def export_shapefile_of_points_to_qgis(self, Input_Table, Output_Layer_File_shp, Output_Layer_Name):
 
 
         #Input_Table            = os.path.join(self.path_absolute , '2_ZM_' + self.atributos_ZM + '_Class.csv') # set the filepath for the input CSV
@@ -7201,6 +7845,10 @@ class smart_map:
         layerTree.insertChildNode(-1, QgsLayerTreeLayer(vlayer))
 
 
+    def export_shapefile_of_polygons_to_qgis(self, Input_Table, Output_Layer_File_shp, Output_Layer_Name):
+
+        print('falta implementar')  
+                
 
     def export_raster_to_qgis(self, Input_Table, Output_Layer_File_tiff, Output_Layer_Name, z_field):
 
@@ -7298,7 +7946,7 @@ class smart_map:
             layerTree = self.iface.layerTreeCanvasBridge().rootGroup()
             # the position is a number starting from 0, with -1 an alias for the end
             layerTree.insertChildNode(-1, QgsLayerTreeLayer(rlayer))
-            self.define_raster_color_ramp(rlayer)
+            self.define_raster_color_ramp(rlayer, Output_Layer_Name)
 
 
             #set CRS da layer RasterLayer 
@@ -7369,54 +8017,12 @@ class smart_map:
                     layerTree = self.iface.layerTreeCanvasBridge().rootGroup()
                     # the position is a number starting from 0, with -1 an alias for the end
                     layerTree.insertChildNode(-1, QgsLayerTreeLayer(rlayer))
-                    self.define_raster_color_ramp(rlayer)
+                    self.define_raster_color_ramp(rlayer, Output_Layer_Name)
 
 
-    def define_raster_color_ramp(self, layer):
+    def define_raster_color_ramp(self, layer, Output_Layer_Name):
 
 
-        '''
-        #renderer = layer.renderer()
-        provider = layer.dataProvider()
-        
-        #ver = provider.hasStatistics(1, QgsRasterBandStats.All)
-        
-        extent = layer.extent()
-        
-        stats = provider.bandStatistics(1, QgsRasterBandStats.All,extent, 0)
-        
-        if (stats.minimumValue < 0):
-           min_value = 0  
-        
-        else: 
-            min_value = stats.minimumValue
-        
-        max_value = stats.maximumValue
-        range_value = max_value - min_value
-        add = range_value//2
-        interval = min_value + add
-        
-        colDic = {'red':'#ff0000', 'yellow':'#ffff00','green':'#00ff00'}
-        
-        valueList =[min_value, interval, max_value]
-        
-        lst = [QgsColorRampShader.ColorRampItem(valueList[0], QColor(colDic['red'])),\
-               QgsColorRampShader.ColorRampItem(valueList[1], QColor(colDic['yellow'])), \
-               QgsColorRampShader.ColorRampItem(valueList[2], QColor(colDic['green']))]
-        
-        myRasterShader = QgsRasterShader()
-        myColorRamp = QgsColorRampShader()
-        
-        myColorRamp.setColorRampItemList(lst)
-        myColorRamp.setColorRampType(QgsColorRampShader.Interpolated)
-        myRasterShader.setRasterShaderFunction(myColorRamp)
-        
-        myPseudoRenderer = QgsSingleBandPseudoColorRenderer(layer.dataProvider(), layer.type(), myRasterShader)                                                                    
-        
-        layer.setRenderer(myPseudoRenderer)
-        
-        layer.triggerRepaint()        
-        '''
        
         #renderer = layer.renderer()
         provider = layer.dataProvider()
@@ -7459,7 +8065,10 @@ class smart_map:
         
         
         #To set an interpolated color RdYlGn ramp shader with five classes
-        number_classes = 5
+        if '2_ZM' in Output_Layer_Name:
+            number_classes = self.dlg.spinBox_ZM_NrZonas.value()
+        else:     
+            number_classes = 5
         
         interval = (max_value - min_value)/(number_classes -1 )
         
@@ -7472,18 +8081,41 @@ class smart_map:
             #print('class {:d}: {:d}'.format(i+1, tmp))
             classes.append(tmp)
             soma += interval
+
         
-       
-        c1 = [ int(element) for element in rp['color1'].split(',') ]
-        stops = [ element for element in re.split('[,;:]', rp['stops']) ]
-        c2 = [ int(element) for element in rp['color2'].split(',') ]
+        c1 = [ int(element) for element in rp['color1'].split(',') ]           #first color  Ex: red
+        stops = [ element for element in re.split('[,;:]', rp['stops']) ]      #intermediate colors 
+        c2 = [ int(element) for element in rp['color2'].split(',') ]           #last color   Ex: green 
+
         
-        color_list = [ QgsColorRampShader.ColorRampItem(classes[0], QColor(c1[0],c1[1],c1[2], c1[3])),
-                       QgsColorRampShader.ColorRampItem(classes[1], QColor(int(stops[1]),int(stops[2]),int(stops[3]),int(stops[4]))),
-                       QgsColorRampShader.ColorRampItem(classes[2], QColor(int(stops[6]),int(stops[7]),int(stops[8]),int(stops[9]))),
-                       QgsColorRampShader.ColorRampItem(classes[3], QColor(int(stops[11]),int(stops[12]),int(stops[13]),int(stops[14]))),
-                       QgsColorRampShader.ColorRampItem(classes[4], QColor(c2[0],c2[1],c2[2], c2[3])) ]
+        if number_classes == 2: 
+
+            color_list = [ QgsColorRampShader.ColorRampItem(classes[0], QColor(c1[0],c1[1],c1[2], c1[3]), '%.1f' % classes[0] ),
+                           QgsColorRampShader.ColorRampItem(classes[1], QColor(c2[0],c2[1],c2[2], c2[3]), '%.1f' % classes[1]) ]
+            
+        elif number_classes == 3:     
         
+            color_list = [ QgsColorRampShader.ColorRampItem(classes[0], QColor(c1[0],c1[1],c1[2], c1[3]), '%.1f' % classes[0] ),
+                           QgsColorRampShader.ColorRampItem(classes[1], QColor(int(stops[1]),int(stops[2]),int(stops[3]),int(stops[4])), '%.1f' % classes[1]),
+                           QgsColorRampShader.ColorRampItem(classes[2], QColor(c2[0],c2[1],c2[2], c2[3]), '%.1f' % classes[2]) ]
+
+
+        elif number_classes == 4:     
+        
+            color_list = [ QgsColorRampShader.ColorRampItem(classes[0], QColor(c1[0],c1[1],c1[2], c1[3]), '%.1f' % classes[0] ),
+                           QgsColorRampShader.ColorRampItem(classes[1], QColor(int(stops[1]),int(stops[2]),int(stops[3]),int(stops[4])), '%.1f' % classes[1]),
+                           QgsColorRampShader.ColorRampItem(classes[2], QColor(int(stops[6]),int(stops[7]),int(stops[8]),int(stops[9])), '%.1f' % classes[2]),
+                           QgsColorRampShader.ColorRampItem(classes[3], QColor(c2[0],c2[1],c2[2], c2[3]), '%.1f' % classes[3]) ]
+
+        else: 
+            
+            color_list = [ QgsColorRampShader.ColorRampItem(classes[0], QColor(c1[0],c1[1],c1[2], c1[3]), '%.6f' % classes[0] ),
+                           QgsColorRampShader.ColorRampItem(classes[1], QColor(int(stops[1]),int(stops[2]),int(stops[3]),int(stops[4])), '%.6f' % classes[1]),
+                           QgsColorRampShader.ColorRampItem(classes[2], QColor(int(stops[6]),int(stops[7]),int(stops[8]),int(stops[9])), '%.6f' % classes[2]),
+                           QgsColorRampShader.ColorRampItem(classes[3], QColor(int(stops[11]),int(stops[12]),int(stops[13]),int(stops[14])), '%.6f' % classes[3]),
+                           QgsColorRampShader.ColorRampItem(classes[4], QColor(c2[0],c2[1],c2[2], c2[3]), '%.6f' % classes[4]) ]
+            
+
         myRasterShader = QgsRasterShader()
         myColorRamp = QgsColorRampShader()
         
@@ -7494,6 +8126,8 @@ class smart_map:
         myPseudoRenderer = QgsSingleBandPseudoColorRenderer(layer.dataProvider(), 1,  myRasterShader)
         
         layer.setRenderer(myPseudoRenderer)
+
+       
         
         layer.triggerRepaint()    
                                 
