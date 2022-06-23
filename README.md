@@ -9,6 +9,10 @@ O principal objetivo desse plugin é fornecer uma plataforma livre e open source
 Disponível para os Sistemas Operacionais Windows, Linux e Mac tendo como única dependência o QGIS 3.10.x 64 bits instalado.
 Desenvolvido em Python 3, o plugin utiliza alguns pacotes já incorporados ao seu código como: [scikit-learn](https://github.com/scikit-learn/scikit-learn), [scikit-fuzzy](https://github.com/scikit-fuzzy/scikit-fuzzy), [pysal](https://github.com/pysal) e [pyKrige](https://github.com/GeoStat-Framework/PyKrige).
 
+
+## Como citar o artigo que descreve o software:
+Pereira, G.W.; Valente, D.S.M.; Queiroz, D.M.d.; Coelho, A.L.d.F.; Costa, M.M.; Grift, T. [Smart-Map: An Open-Source QGIS Plugin for Digital Mapping Using Machine Learning Techniques and Ordinary Kriging. Agronomy 2022, 12, 1350.](https://www.mdpi.com/2073-4395/12/6/1350/htm) https://doi.org/10.3390/agronomy12061350
+
 ## Como Instalar
 
 ### Dependências 
