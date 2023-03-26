@@ -1053,7 +1053,7 @@ class smart_map:
                     
             lista_cut_xy = []
 
-            polygono = np.array(self.df_limite, dtype=np.float)                #define the polygon = area of boundary
+            polygono = np.array(self.df_limite, dtype=float)                #define the polygon = area of boundary
             bbPath = mplPath.Path(polygono)
 
             for i in range(len(arr_xy)):
@@ -1629,7 +1629,7 @@ class smart_map:
                         df_outlier = self.df.loc[self.df.index[self.list_index_outlier]]
     
                         self.data_outlier = df_outlier[[self.Cord_X, self.Cord_Y, self.v_target]] 
-                        self.data_outlier = np.array( self.data_outlier, dtype=np.float )
+                        self.data_outlier = np.array( self.data_outlier, dtype=float )
     
                         self.df.drop(self.df.index[self.list_index_outlier], inplace=True)
                         self.df.reset_index(drop = True, inplace=True)
@@ -1643,7 +1643,7 @@ class smart_map:
                     #Calculando Max e Min para o mapa de contorno  
         
                     self.data = self.df[[self.Cord_X, self.Cord_Y, self.v_target]] 
-                    self.data = np.array( self.data, dtype=np.float )
+                    self.data = np.array( self.data, dtype=float )
         
                     self.Pixel_Size_X = self.dlg.SpinBox_Pixel_Size_X.value() 
         
@@ -2286,7 +2286,7 @@ class smart_map:
                 self.df_limite = pd.concat([self.df_limite, self.df_limite.iloc[[0]]], ignore_index=True, axis = 0)  #concantena depois da ultima linha a primeira linha para fechar a area de contorno
                 
                 
-                self.data_limite = np.array( self.df_limite, dtype=np.float )       
+                self.data_limite = np.array( self.df_limite, dtype=float )       
                 
                 self.dlg.datatable_limite.setColumnCount(len(self.df_limite.columns))
                 self.dlg.datatable_limite.setRowCount(len(self.df_limite.index))
@@ -2365,7 +2365,7 @@ class smart_map:
             
     
     
-                polygono = np.array(self.df_limite, dtype=np.float)                #define o polygono = area de contorno 
+                polygono = np.array(self.df_limite, dtype=float)                #define o polygono = area de contorno 
                 bbPath = mplPath.Path(polygono)
     
                 #drop points out of polygon 
@@ -2401,7 +2401,7 @@ class smart_map:
             
                 #plotar mapa de pontos e Area Limite     
                 self.data = self.df[[self.Cord_X, self.Cord_Y, self.v_target]] 
-                self.data = np.array( self.data, dtype=np.float )
+                self.data = np.array( self.data, dtype=float )
     
     
         
@@ -4701,7 +4701,7 @@ class smart_map:
                             
                     lista_cut_xy = []
         
-                    polygono = np.array(self.df_limite, dtype=np.float)        #define o polygono = area de contorno 
+                    polygono = np.array(self.df_limite, dtype=float)        #define o polygono = area de contorno 
                     bbPath = mplPath.Path(polygono)
     
                     maximum = len(arr_xy)
@@ -5090,7 +5090,7 @@ class smart_map:
                                 self.pushButton_Area_Contorno_clicked()    
 
 
-                        polygono = np.array(self.df_limite, dtype=np.float)    #define o polygono = area de contorno
+                        polygono = np.array(self.df_limite, dtype=float)    #define o polygono = area de contorno
                         bbPath = mplPath.Path(polygono)
                         
                         cont = 1       
@@ -5158,7 +5158,7 @@ class smart_map:
                         gridy       = np.arange(coord_y_min, coord_y_max, self.Pixel_Size_Y)
 
                         if self.dlg.checkBox_Area_Contorno.isChecked(): 
-                            polygono = np.array(self.df_limite, dtype=np.float)#define o poly = area de contorno 
+                            polygono = np.array(self.df_limite, dtype=float)#define o poly = area de contorno 
                             bbPath = mplPath.Path(polygono)
     
 
@@ -5449,7 +5449,7 @@ class smart_map:
         
                     if self.dlg.checkBox_Area_Contorno.isChecked(): 
         
-                        polygono = np.array(self.df_limite, dtype=np.float)    #define o polygono = area de contorno
+                        polygono = np.array(self.df_limite, dtype=float)    #define o polygono = area de contorno
                         bbPath = mplPath.Path(polygono)
                         
                         cont = 1       
@@ -5798,7 +5798,7 @@ class smart_map:
                         
                 lista_cut_xy = []
     
-                polygono = np.array(self.df_limite, dtype=np.float)        #define o polygono = area de contorno 
+                polygono = np.array(self.df_limite, dtype=float)        #define o polygono = area de contorno 
                 bbPath = mplPath.Path(polygono)
 
                 maximum = len(arr_xy)
@@ -5853,9 +5853,9 @@ class smart_map:
      
         #k_folds    =  self.dlg.spinBox_KFolds_CV.value()                  #numero de K-Folds para CV
 
-        features = np.array(self.df_SVM_Trainfeatures, dtype=np.float)
+        features = np.array(self.df_SVM_Trainfeatures, dtype=float)
      
-        labels =   np.array(self.df_SVM_Trainlabels   , dtype=np.float)
+        labels =   np.array(self.df_SVM_Trainlabels   , dtype=float)
       
      
         maximum = (len(self.grid_xy) * 3)  + 5            
@@ -6164,9 +6164,9 @@ class smart_map:
            k_folds = 5 
 
 
-        features = np.array(self.df_SVM_Trainfeatures, dtype=np.float)
+        features = np.array(self.df_SVM_Trainfeatures, dtype=float)
         
-        labels =   np.array(self.df_SVM_Trainlabels  , dtype=np.float)
+        labels =   np.array(self.df_SVM_Trainlabels  , dtype=float)
 
 
         maximum = len(features) + (len(features) * 4) + 3
@@ -7261,7 +7261,7 @@ class smart_map:
             '''
             
             
-            data = np.array(self.df_ZM, dtype=np.float)
+            data = np.array(self.df_ZM, dtype=float)
 
             X = np.copy(data[:, [0, 1]])   #pega todos os dados da matriz coluna 0 (Coord_X) e coluna 1 (Coord_Y)
                        
